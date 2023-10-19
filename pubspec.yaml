@@ -1,10 +1,10 @@
 name: sensitive_content_analysis
-description: "A new Flutter plugin project."
+description: "Flutter package for interacting with Apple's Sensitive Content Analysis."
 version: 0.0.1
-homepage:
+homepage: https://github.com/jonafeucht/sensitive_content_analysis
 
 environment:
-  sdk: '>=3.2.0-210.2.beta <4.0.0'
+  sdk: '>=3.1.0 <4.0.0'
   flutter: '>=3.3.0'
 
 dependencies:
