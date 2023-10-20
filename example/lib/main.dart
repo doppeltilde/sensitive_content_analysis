@@ -1,9 +1,8 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:sensitive_content_analysis/sensitive_content_analysis.dart';
+import 'package:sensitive_content_analysis/sensitive_content_analysis_platform.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,8 +31,8 @@ class _MyAppState extends State<MyApp> {
         Uint8List imageData = await image.readAsBytes();
 
         // Analyze the image for sensitive content.
-        final bool isSensitive =
-            await SensitiveContentAnalysis.analyzeImage(imageData);
+        bool? isSensitive = await SensitiveContentAnalysisPlatform.instance
+            .analyzeImage(imageData);
         print(isSensitive);
       }
     } catch (e) {
