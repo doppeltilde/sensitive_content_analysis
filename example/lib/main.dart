@@ -33,7 +33,7 @@ class _MyAppState extends State<MyApp> {
         // Analyze the image for sensitive content.
         bool? isSensitive = await SensitiveContentAnalysisPlatform.instance
             .analyzeImage(imageData);
-        print(isSensitive);
+        print("SENS: $isSensitive");
       }
     } catch (e) {
       debugPrint(e.toString());
