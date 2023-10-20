@@ -1,6 +1,6 @@
 name: sensitive_content_analysis
-description: "Flutter package for interacting with Apple's Sensitive Content Analysis."
-version: 0.0.3
+description: "Dart package for interacting with Apple's Sensitive Content Analysis."
+version: 0.0.4
 homepage: https://github.com/jonafeucht/sensitive_content_analysis
 
 environment:

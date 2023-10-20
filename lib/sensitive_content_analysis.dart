@@ -3,23 +3,22 @@ import 'package:flutter/services.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:sensitive_content_analysis/sensitive_content_analysis_service.dart';
 
-abstract class SensitiveContentAnalysisPlatform extends PlatformInterface {
+abstract class SensitiveContentAnalysis extends PlatformInterface {
   /// Constructs a GamesServicesPlatform.
-  SensitiveContentAnalysisPlatform() : super(token: _token);
+  SensitiveContentAnalysis() : super(token: _token);
 
   static final Object _token = Object();
 
-  static SensitiveContentAnalysisPlatform _instance =
-      SensitiveContentAnalysisService();
+  static SensitiveContentAnalysis _instance = SensitiveContentAnalysisService();
 
   /// The default instance of [GamesServicesPlatform] to use.
   ///
   /// Defaults to [MethodChannelGamesServices].
-  static SensitiveContentAnalysisPlatform get instance => _instance;
+  static SensitiveContentAnalysis get instance => _instance;
 
   /// Platform-specific plugins should set this with their own platform-specific
   /// class that extends [GamesServicesPlatform] when they register themselves.
-  static set instance(SensitiveContentAnalysisPlatform instance) {
+  static set instance(SensitiveContentAnalysis instance) {
     PlatformInterface.verifyToken(instance, _token);
     _instance = instance;
   }

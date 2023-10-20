@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:sensitive_content_analysis/sensitive_content_analysis_platform.dart';
+import 'package:sensitive_content_analysis/sensitive_content_analysis.dart';
 
 const methodChannel = MethodChannel('sensitive_content_analysis');
 
-class SensitiveContentAnalysisService extends SensitiveContentAnalysisPlatform {
+class SensitiveContentAnalysisService extends SensitiveContentAnalysis {
   @override
   Future<bool> analyzeImage(Uint8List file) async {
     try {

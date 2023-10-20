@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:sensitive_content_analysis/sensitive_content_analysis_platform.dart';
+import 'package:sensitive_content_analysis/sensitive_content_analysis.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,8 +21,9 @@ class _MyAppState extends State<MyApp> {
     super.initState();
   }
 
-  Future<void> sendMessageWithImage() async {
+  Future<void> analyzeImage() async {
     try {
+      final sca = SensitiveContentAnalysis.instance;
       final ImagePicker picker = ImagePicker();
 // Pick an image.
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
@@ -31,9 +32,8 @@ class _MyAppState extends State<MyApp> {
         Uint8List imageData = await image.readAsBytes();
 
         // Analyze the image for sensitive content.
-        bool? isSensitive = await SensitiveContentAnalysisPlatform.instance
-            .analyzeImage(imageData);
-        print("SENS: $isSensitive");
+        bool? isSensitive = await sca.analyzeImage(imageData);
+        debugPrint("SENSITIVE: $isSensitive");
       }
     } catch (e) {
       debugPrint(e.toString());
@@ -49,8 +49,8 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Center(
           child: ElevatedButton(
-            onPressed: () => sendMessageWithImage(),
-            child: Text("IMAGE"),
+            onPressed: () => analyzeImage(),
+            child: const Text("IMAGE"),
           ),
         ),
       ),
