@@ -12,7 +12,7 @@ class SensitiveContentAnalysisService extends SensitiveContentAnalysis {
           await methodChannel.invokeMethod('analyzeImage', file);
       return isSensitive;
     } on PlatformException catch (e) {
-      debugPrint(e.toString());
+      debugPrint(e.message);
       return false;
     }
   }
@@ -24,13 +24,19 @@ class SensitiveContentAnalysisService extends SensitiveContentAnalysis {
           await methodChannel.invokeMethod('analyzeNetworkImage', {"url": url});
       return isSensitive;
     } on PlatformException catch (e) {
-      debugPrint(e.toString());
+      debugPrint(e.message);
       return false;
     }
   }
 
   @override
-  Future<void> intervene(String path) async {
-    await methodChannel.invokeMethod('intervene', path);
+  Future<bool> checkPolicy() async {
+    try {
+      final result = await methodChannel.invokeMethod('checkPolicy');
+      return result;
+    } on PlatformException catch (e) {
+      debugPrint(e.message);
+      return false;
+    }
   }
 }

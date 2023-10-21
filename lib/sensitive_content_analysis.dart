@@ -37,10 +37,10 @@ abstract class SensitiveContentAnalysis extends PlatformInterface {
     throw UnimplementedError("not implemented.");
   }
 
-  /// Intervenes on an image that has been identified as sensitive.
+  /// Check Policy.
   ///
-  /// The specific intervention behavior will vary depending on the platform.
-  Future<void> intervene(String path) async {
+  /// Returns a `bool` indicating whether the image is sensitive.
+  Future<bool?> checkPolicy() async {
     throw UnimplementedError("not implemented.");
   }
 }

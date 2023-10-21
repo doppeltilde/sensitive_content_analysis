@@ -16,6 +16,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  final sca = SensitiveContentAnalysis.instance;
+
   @override
   void initState() {
     super.initState();
@@ -23,7 +25,6 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> analyzeImage() async {
     try {
-      final sca = SensitiveContentAnalysis.instance;
       final ImagePicker picker = ImagePicker();
 
       // Pick an image.
@@ -43,8 +44,6 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> analyzeNetworkImage(String? url) async {
     try {
-      final sca = SensitiveContentAnalysis.instance;
-
       if (url != null) {
         // Analyze the image for sensitive content.
         bool? isSensitive = await sca.analyzeNetworkImage(url: url);
@@ -53,6 +52,11 @@ class _MyAppState extends State<MyApp> {
     } catch (e) {
       debugPrint(e.toString());
     }
+  }
+
+  checkPolicy() async {
+    bool? policy = await sca.checkPolicy();
+    debugPrint("Policy: $policy");
   }
 
   final String? analyzeUrl =

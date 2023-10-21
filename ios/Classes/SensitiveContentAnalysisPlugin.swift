@@ -63,7 +63,7 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
 
 
     @available(iOS 17.0, *)
-    private func checkSensitivityAnalysisPolicy(result: @escaping (Bool?, Error?) -> Void) {
+    private func checkPolicy(result: @escaping (Bool?, Error?) -> Void) {
         let analyzer = try SCSensitivityAnalyzer()
         // Check the current analysis policy. 
         let policy = analyzer.analysisPolicy
@@ -110,6 +110,18 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
                             result(isSensitive)
                         }
                 }
+        
+            case "checkPolicy":
+                checkPolicy { (policyResult, error) in
+                    if let error = error {
+                        result(FlutterError(code: "ERROR", message: error.localizedDescription, details: nil))
+                    } else if let policyResult = policyResult {
+                        result(policyResult)
+                    } else {
+                        result(FlutterError(code: "UNEXPECTED_ERROR", message: "Unexpected error occurred", details: nil))
+                    }
+                }
+
             default:
                 result(FlutterMethodNotImplemented)
             }
