@@ -39,7 +39,7 @@ abstract class SensitiveContentAnalysis extends PlatformInterface {
 
   /// Check Policy.
   ///
-  /// Returns a `bool` indicating whether the image is sensitive.
+  /// Returns a `int` indicating the policy value.
   Future<bool?> checkPolicy() async {
     throw UnimplementedError("not implemented.");
   }
