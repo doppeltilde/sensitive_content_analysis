@@ -40,7 +40,7 @@ abstract class SensitiveContentAnalysis extends PlatformInterface {
   /// Check Policy.
   ///
   /// Returns a `int` indicating the policy value.
-  Future<bool?> checkPolicy() async {
+  Future<int?> checkPolicy() async {
     throw UnimplementedError("not implemented.");
   }
 }

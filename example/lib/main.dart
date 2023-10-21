@@ -55,7 +55,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   checkPolicy() async {
-    bool? policy = await sca.checkPolicy();
+    int? policy = await sca.checkPolicy();
     debugPrint("Policy: $policy");
   }
 
@@ -78,6 +78,10 @@ class _MyAppState extends State<MyApp> {
             ElevatedButton(
               onPressed: () => analyzeNetworkImage(analyzeUrl),
               child: const Text("Select Network Image."),
+            ),
+            ElevatedButton(
+              onPressed: () => checkPolicy(),
+              child: const Text("Check Policy."),
             ),
           ]),
         ),

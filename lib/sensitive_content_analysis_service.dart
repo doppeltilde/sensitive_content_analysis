@@ -30,13 +30,13 @@ class SensitiveContentAnalysisService extends SensitiveContentAnalysis {
   }
 
   @override
-  Future<bool> checkPolicy() async {
+  Future<int?> checkPolicy() async {
     try {
       final result = await methodChannel.invokeMethod('checkPolicy');
       return result;
     } on PlatformException catch (e) {
       debugPrint(e.message);
-      return false;
+      return null;
     }
   }
 }
