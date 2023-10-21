@@ -30,6 +30,13 @@ abstract class SensitiveContentAnalysis extends PlatformInterface {
     throw UnimplementedError("not implemented.");
   }
 
+  /// Analyzes an network image for sensitive content.
+  ///
+  /// Returns a `bool` indicating whether the image is sensitive.
+  Future<bool?> analyzeNetworkImage({required String url}) async {
+    throw UnimplementedError("not implemented.");
+  }
+
   /// Intervenes on an image that has been identified as sensitive.
   ///
   /// The specific intervention behavior will vary depending on the platform.

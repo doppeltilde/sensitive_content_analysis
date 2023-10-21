@@ -18,6 +18,18 @@ class SensitiveContentAnalysisService extends SensitiveContentAnalysis {
   }
 
   @override
+  Future<bool> analyzeNetworkImage({required String url}) async {
+    try {
+      final dynamic isSensitive =
+          await methodChannel.invokeMethod('analyzeNetworkImage', {"url": url});
+      return isSensitive;
+    } on PlatformException catch (e) {
+      debugPrint(e.toString());
+      return false;
+    }
+  }
+
+  @override
   Future<void> intervene(String path) async {
     await methodChannel.invokeMethod('intervene', path);
   }

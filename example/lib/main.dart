@@ -25,7 +25,8 @@ class _MyAppState extends State<MyApp> {
     try {
       final sca = SensitiveContentAnalysis.instance;
       final ImagePicker picker = ImagePicker();
-// Pick an image.
+
+      // Pick an image.
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
       if (image != null) {
@@ -40,6 +41,23 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  Future<void> analyzeNetworkImage(String? url) async {
+    try {
+      final sca = SensitiveContentAnalysis.instance;
+
+      if (url != null) {
+        // Analyze the image for sensitive content.
+        bool? isSensitive = await sca.analyzeNetworkImage(url: url);
+        debugPrint("SENSITIVE: $isSensitive");
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  final String analyzeUrl =
+      "https://docs-assets.developer.apple.com/published/517e263450/rendered2x-1685188934.png";
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -48,10 +66,16 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: ElevatedButton(
-            onPressed: () => analyzeImage(),
-            child: const Text("IMAGE"),
-          ),
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            ElevatedButton(
+              onPressed: () => analyzeImage(),
+              child: const Text("Select Image."),
+            ),
+            ElevatedButton(
+              onPressed: () => analyzeNetworkImage(analyzeUrl),
+              child: const Text("Select Network Image."),
+            ),
+          ]),
         ),
       ),
     );
