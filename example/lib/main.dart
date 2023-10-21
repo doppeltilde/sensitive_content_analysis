@@ -55,7 +55,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  final String analyzeUrl =
+  final String? analyzeUrl =
       "https://docs-assets.developer.apple.com/published/517e263450/rendered2x-1685188934.png";
 
   @override

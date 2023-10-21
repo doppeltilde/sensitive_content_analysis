@@ -103,5 +103,16 @@ final String? analyzeUrl = "https://docs-assets.developer.apple.com/published/51
 
 ---
 
+### Caveats
+
+- Unlike with other ML models, Apple's SensitiveContentAnalysis does not return
+  a list of probabilities.
+- Unlike with other ML models, Apple's SensitiveContentAnalysis does not allow
+  additional training.
+- Unlike with other ML models, Apple's SensitiveContentAnalysis is not open
+  source.
+
+---
+
 _Notice:_ _This package was initally created to be used in-house, as such the
 development is first and foremost aligned with the internal requirements._
