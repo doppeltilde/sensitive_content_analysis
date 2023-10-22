@@ -1,3 +1,8 @@
+## 0.0.7
+
+- Feat: Added `checkPolicy`.
+- Fixes.
+
 ## 0.0.6
 
 - Feat: Added `analyzeNetworkImage`.

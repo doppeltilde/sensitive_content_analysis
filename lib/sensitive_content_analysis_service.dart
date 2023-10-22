@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:sensitive_content_analysis/sensitive_content_analysis.dart';
+import 'package:sensitive_content_analysis/sensitive_content_analysis_platform_interface.dart';
 
 const methodChannel = MethodChannel('sensitive_content_analysis');
 
