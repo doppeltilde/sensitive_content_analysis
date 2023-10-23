@@ -1,11 +1,20 @@
-import Flutter
-import UIKit
+import SwiftUI
 import SensitiveContentAnalysis
+
+#if os(iOS)
+import Flutter
+#else
+import FlutterMacOS
+#endif
 
 public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
     
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let channel = FlutterMethodChannel(name: "sensitive_content_analysis", binaryMessenger: registrar.messenger())
+         #if os(iOS)
+ 		let channel = FlutterMethodChannel(name: "sensitive_content_analysis", binaryMessenger: registrar.messenger())
+ 	    #else
+ 		let channel = FlutterMethodChannel(name: "sensitive_content_analysis", binaryMessenger: registrar.messenger)
+ 	    #endif
         let instance = SensitiveContentAnalysisPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
@@ -60,7 +69,6 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
             }
         }
     }
-
 
     @available(iOS 17.0, *)
     private func checkPolicy(result: @escaping (Int?, Error?) -> Void) {
