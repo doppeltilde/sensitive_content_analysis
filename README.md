@@ -1,4 +1,4 @@
-# WIP! Sensitive Content Analysis
+# Sensitive Content Analysis
 
 #### Provide a safer experience in your app by detecting and alerting users to nudity in images and videos before displaying them onscreen.
 
@@ -12,7 +12,8 @@ Dart package for interacting with Apple's
 
 #### Minimum requirements
 
-iOS/iPadOS `>=17.0+`
+- iOS/iPadOS `>=17.0`
+- macOS `>=14.0`
 
 ---
 
@@ -105,12 +106,11 @@ final String? analyzeUrl = "https://docs-assets.developer.apple.com/published/51
 
 ### Caveats
 
-- Unlike with other ML models, Apple's SensitiveContentAnalysis does not return
-  a list of probabilities.
-- Unlike with other ML models, Apple's SensitiveContentAnalysis does not allow
-  additional training.
-- Unlike with other ML models, Apple's SensitiveContentAnalysis is not open
-  source.
+Unlike with other ML models, Apple's SensitiveContentAnalysis Framework:
+
+- Does not return a list of probabilities.
+- Does not allow additional training.
+- Is not open source.
 
 ---
 

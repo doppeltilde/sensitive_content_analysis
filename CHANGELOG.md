@@ -1,3 +1,8 @@
+## 1.0.0
+
+- Feat: `macOS` Platform.
+- Fixes.
+
 ## 0.0.7
 
 - Feat: Added `checkPolicy`.
