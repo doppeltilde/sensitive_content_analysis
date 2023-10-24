@@ -7,7 +7,7 @@
 
 [![Pub](https://img.shields.io/pub/v/sensitive_content_analysis.svg?style=popout&include_prereleases)](https://pub.dev/packages/sensitive_content_analysis)
 
-Dart package for interacting with Apple's
+Dart plugin for interacting with Apple's
 [SensitiveContentAnalysis Framework](https://developer.apple.com/documentation/sensitivecontentanalysis).
 
 #### Minimum requirements
@@ -57,10 +57,9 @@ capability in Xcode.
             debugPrint("Enable ”Sensitive Content Warning” in Settings -> Privacy & Security.");
             return null;
         }
-
-    } catch (e) {
-        return null;
     }
+  } catch (e) {
+      return null;
   }
 ```
 
@@ -91,10 +90,9 @@ final String? analyzeUrl = "https://docs-assets.developer.apple.com/published/51
             debugPrint("Enable ”Sensitive Content Warning” in Settings -> Privacy & Security.");
             return null;
         }
-
-    } catch (e) {
-        return null;
     }
+  } catch (e) {
+      return null;
   }
 ```
 
