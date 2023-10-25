@@ -40,7 +40,7 @@ capability in Xcode.
 
 ```dart
   try {
-    final sca = SensitiveContentAnalysis.instance;
+    final sca = SensitiveContentAnalysis();
     final ImagePicker picker = ImagePicker();
 
     // Pick an image.
@@ -79,7 +79,7 @@ https://developer.apple.com/documentation/sensitivecontentanalysis/testing_your_
 final String? analyzeUrl = "https://docs-assets.developer.apple.com/published/517e263450/rendered2x-1685188934.png";
 
   try {
-    final sca = SensitiveContentAnalysis.instance;
+    final sca = SensitiveContentAnalysis();
 
     if (analyzeUrl != null) {
         // Analyze the network image for sensitive content.
