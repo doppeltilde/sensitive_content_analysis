@@ -21,7 +21,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   file_selector_macos: 468fb6b81fac7c0e88d71317f3eec34c3b008ff9
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
-  sensitive_content_analysis: c07361d542c1f224358db4b857125f6dcb6b4e42
+  sensitive_content_analysis: 37506f2704c4bc072e9b093a64f9d991a8b9c77e
 
 PODFILE CHECKSUM: 6acf97521436d16fc31cd5e1a02000905acdb3ae
 
