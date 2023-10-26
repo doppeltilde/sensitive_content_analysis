@@ -22,7 +22,7 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
 
     @available(iOS 17.0, macOS 14.0, *)
     private func analyzeImage(image: FlutterStandardTypedData, result: @escaping (Bool?, Error?) -> Void) {
-        DispatchQueue.global().async {
+        DispatchQueue.global(qos: .userInteractive).async {
             do {
                 let analyzer = try SCSensitivityAnalyzer()
                 let policy = analyzer.analysisPolicy
@@ -98,7 +98,7 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
 
     @available(iOS 17.0, macOS 14.0, *)
     private func analyzeNetworkImage(at fileURL: URL, result: @escaping (Bool?, Error?) -> Void) {
-        DispatchQueue.global().async {
+        DispatchQueue.global(qos: .userInteractive).async {
             do {
                 let analyzer = try SCSensitivityAnalyzer()
                 let policy = analyzer.analysisPolicy
@@ -165,16 +165,28 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
 
     @available(iOS 17.0, macOS 14.0, *)
     private func checkPolicy(result: @escaping (Int?, Error?) -> Void) {
-        let analyzer = try SCSensitivityAnalyzer()
-        // Check the current analysis policy. 
-        let policy = analyzer.analysisPolicy
-        if policy == .disabled { return result(0, nil) } 
-        else if policy == .simpleInterventions {
-            return result(1, nil)
-        } else if policy == .descriptiveInterventions {
-            return result(2, nil)
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let analyzer = try SCSensitivityAnalyzer()
+                // Check the current analysis policy. 
+                let policy = analyzer.analysisPolicy
+                DispatchQueue.main.async {
+                    if policy == .disabled {
+                        result(0, nil)
+                    } else if policy == .simpleInterventions {
+                        result(1, nil)
+                    } else if policy == .descriptiveInterventions {
+                        result(2, nil)
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    result(nil, error)
+                }
+            }
         }
     }
+
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         if #available(iOS 17.0, macOS 14.0, *) {
