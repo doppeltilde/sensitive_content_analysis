@@ -109,7 +109,7 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
                     }
                 } else {
                     #if os(iOS)
-                    if let data = try? Data(contentsOf: fileURL),
+                    if let data = try? Data(contentsOf: fileURL, options: [.mappedIfSafe, .uncached]),
                     let uiImage = UIImage(data: data),
                     let cgImage = uiImage.cgImage {
                         Task {
@@ -131,7 +131,7 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
                         }
                     }
                     #elseif os(macOS)
-                    if let data = try? Data(contentsOf: fileURL),
+                    if let data = try? Data(contentsOf: fileURL, options: [.mappedIfSafe, .uncached]),
                     let nsImage = NSImage(data: data) {
                         if let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) {
                             Task {
