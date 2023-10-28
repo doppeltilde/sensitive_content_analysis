@@ -36,6 +36,17 @@ capability in Xcode.
 
 ## Usage
 
+### Check Policy:
+
+```dart
+final sca = SensitiveContentAnalysis();
+
+int? policy = await sca.checkPolicy();
+if (policy != null) {
+  return policy;
+}
+```
+
 #### Analyze File Image:
 
 ```dart

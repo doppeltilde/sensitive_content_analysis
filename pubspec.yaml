@@ -1,6 +1,6 @@
 name: sensitive_content_analysis
 description: "Dart plugin for interacting with Apple's Sensitive Content Analysis Framework."
-version: 1.0.2-rc.1
+version: 1.0.2
 homepage: https://github.com/jonafeucht/sensitive_content_analysis
 
 environment:
