@@ -113,13 +113,19 @@ final String? analyzeUrl = "https://docs-assets.developer.apple.com/published/51
 
 ---
 
+### Apps using:
+<a href="https://apps.apple.com/us/app/id6471840114"><img src="https://play-lh.googleusercontent.com/FSXy-5Yz14YlxIcivLwy0dUfdP8iMSSkkArFDNtNvT5KBeQMvHbxbvaXbmnuJI41xOo" width="64px"></img></a>
+
+---
+
 ### Caveats
 
-Unlike with other ML models, Apple's SensitiveContentAnalysis Framework:
+Unlike with other ML models, the SensitiveContentAnalysis Framework:
 
 - Does not return a list of probabilities.
 - Does not allow additional training.
 - Is not open source.
+- Only works with Apple devices. (iOS 17.0+, macOS 14.0+, Mac Catalyst 17.0+, iPadOS 17.0+)
 
 ---
 
