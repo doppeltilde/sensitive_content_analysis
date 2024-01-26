@@ -1,3 +1,6 @@
+## 1.0.3
+- Added iOS privacy manifest.
+
 ## 1.0.2
 
 - Fixed: When handling tasks that could potentially cause an app to hang or
