@@ -1,4 +1,4 @@
-## 1.0.3
+## 1.0.4
 - Added iOS privacy manifest.
 
 ## 1.0.2
