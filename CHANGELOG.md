@@ -1,5 +1,8 @@
+## 1.1.0
+- Feat: `Video Analysis` added.
+
 ## 1.0.4
-- Added iOS privacy manifest.
+- Added privacy manifest.
 
 ## 1.0.2
 

@@ -1,8 +1,13 @@
+import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sensitive_content_analysis/sensitive_content_analysis.dart';
+import 'package:path/path.dart' as p;
 
 void main() {
   runApp(const MyApp());
@@ -54,6 +59,53 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  Future<void> analyzeDownloadedVideo() async {
+    try {
+      Dio dio = Dio();
+      Directory tempDir = await getTemporaryDirectory();
+
+      const url = "https://developer.apple.com/sample-code/web/qr-sca.mov";
+      final videoName = p.basename(url);
+      final file = File("${tempDir.path}/$videoName");
+      final response = await dio.download(url, file.path);
+
+      if (response.statusCode == 200) {
+        bool? isSensitive = await sca.analyzeVideo(url: file.path);
+        debugPrint("SENSITIVE: $isSensitive");
+        await file.delete();
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  Future<void> analyzeSelectedVideo() async {
+    try {
+      const XTypeGroup typeGroup = XTypeGroup(
+        label: 'video',
+        extensions: <String>['mp4', 'mkv', 'avi', 'mov'],
+      );
+      final XFile? selectedFile =
+          await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
+
+      if (selectedFile != null) {
+        final bytes = await selectedFile.readAsBytes();
+        final videoName = p.basename(selectedFile.path);
+
+        Directory tempDir = await getTemporaryDirectory();
+        File tempFile = File('${tempDir.path}/$videoName');
+
+        await tempFile.writeAsBytes(bytes);
+
+        bool? isSensitive = await sca.analyzeVideo(url: tempFile.path);
+        debugPrint("SENSITIVE: $isSensitive");
+        await tempFile.delete();
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
   checkPolicy() async {
     int? policy = await sca.checkPolicy();
     debugPrint("Policy: $policy");
@@ -72,12 +124,20 @@ class _MyAppState extends State<MyApp> {
         body: Center(
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             ElevatedButton(
-              onPressed: () => analyzeImage(),
+              onPressed: () async => await analyzeImage(),
               child: const Text("Select Image."),
             ),
             ElevatedButton(
-              onPressed: () => analyzeNetworkImage(analyzeUrl),
+              onPressed: () async => await analyzeNetworkImage(analyzeUrl),
               child: const Text("Select Network Image."),
+            ),
+            ElevatedButton(
+              onPressed: () async => await analyzeDownloadedVideo(),
+              child: const Text("Analyze Downloaded Video."),
+            ),
+            ElevatedButton(
+              onPressed: () async => await analyzeSelectedVideo(),
+              child: const Text("Analyze Selected Video."),
             ),
             ElevatedButton(
               onPressed: () => checkPolicy(),

@@ -29,6 +29,19 @@ class SensitiveContentAnalysis {
     }
   }
 
+  /// Analyzes an network image for sensitive content.
+  ///
+  /// Returns a `bool` indicating whether the image is sensitive.
+  Future<bool?> analyzeVideo({required String url}) async {
+    try {
+      final dynamic isSensitive = await methodChannel
+          .invokeMethod('analyzeVideo', {"url": Uri.file(url).toString()});
+      return isSensitive;
+    } on PlatformException catch (e) {
+      throw UnimplementedError(e.message);
+    }
+  }
+
   /// Check Policy.
   ///
   /// Returns a `int` indicating the policy value.
