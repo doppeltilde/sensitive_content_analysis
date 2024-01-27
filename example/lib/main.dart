@@ -59,7 +59,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> analyzeDownloadedVideo() async {
+  Future<void> analyzeNetworkVideo() async {
     try {
       Dio dio = Dio();
       Directory tempDir = await getTemporaryDirectory();
@@ -79,7 +79,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> analyzeSelectedVideo() async {
+  Future<void> analyzeLocalVideo() async {
     try {
       const XTypeGroup typeGroup = XTypeGroup(
         label: 'video',
@@ -89,17 +89,8 @@ class _MyAppState extends State<MyApp> {
           await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
 
       if (selectedFile != null) {
-        final bytes = await selectedFile.readAsBytes();
-        final videoName = p.basename(selectedFile.path);
-
-        Directory tempDir = await getTemporaryDirectory();
-        File tempFile = File('${tempDir.path}/$videoName');
-
-        await tempFile.writeAsBytes(bytes);
-
-        bool? isSensitive = await sca.analyzeVideo(url: tempFile.path);
+        bool? isSensitive = await sca.analyzeVideo(url: selectedFile.path);
         debugPrint("SENSITIVE: $isSensitive");
-        await tempFile.delete();
       }
     } catch (e) {
       debugPrint(e.toString());
@@ -132,11 +123,11 @@ class _MyAppState extends State<MyApp> {
               child: const Text("Select Network Image."),
             ),
             ElevatedButton(
-              onPressed: () async => await analyzeDownloadedVideo(),
+              onPressed: () async => await analyzeNetworkVideo(),
               child: const Text("Analyze Downloaded Video."),
             ),
             ElevatedButton(
-              onPressed: () async => await analyzeSelectedVideo(),
+              onPressed: () async => await analyzeLocalVideo(),
               child: const Text("Analyze Selected Video."),
             ),
             ElevatedButton(

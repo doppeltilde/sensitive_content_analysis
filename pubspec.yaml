@@ -1,6 +1,6 @@
 name: sensitive_content_analysis
 description: "Dart plugin for detecting and alerting users to nudity in images and videos before displaying them, utilizing the SensitiveContentAnalysis Framework by Apple."
-version: 1.1.0-rc.1
+version: 1.1.0-rc.2
 homepage: https://github.com/tiltedcube/sensitive_content_analysis
 
 environment:

@@ -107,9 +107,51 @@ final String? analyzeUrl = "https://docs-assets.developer.apple.com/published/51
   }
 ```
 
-#### Analyze Video:
+#### Analyze Network Video:
 
-- todo
+```dart
+  Future<void> analyzeNetworkVideo() async {
+    try {
+      Dio dio = Dio();
+      Directory tempDir = await getTemporaryDirectory();
+
+      const url = "https://developer.apple.com/sample-code/web/qr-sca.mov";
+      final videoName = p.basename(url);
+      final file = File("${tempDir.path}/$videoName");
+      final response = await dio.download(url, file.path);
+
+      if (response.statusCode == 200) {
+        bool? isSensitive = await sca.analyzeVideo(url: file.path);
+        debugPrint("SENSITIVE: $isSensitive");
+        await file.delete();
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+```
+
+#### Analyze Local Video:
+
+```dart
+  Future<void> analyzeLocalVideo() async {
+    try {
+      const XTypeGroup typeGroup = XTypeGroup(
+        label: 'video',
+        extensions: <String>['mp4', 'mkv', 'avi', 'mov'],
+      );
+      final XFile? selectedFile =
+          await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
+
+      if (selectedFile != null) {
+        bool? isSensitive = await sca.analyzeVideo(url: selectedFile.path);
+        debugPrint("SENSITIVE: $isSensitive");
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+```
 
 ---
 
