@@ -196,15 +196,17 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
         DispatchQueue.global(qos: .userInitiated).async {
             Task {
                 let analyzer = SCSensitivityAnalyzer()
-                // Check the current analysis policy.
                 let policy = analyzer.analysisPolicy
                 DispatchQueue.main.async {
-                    if policy == .disabled {
+                    switch policy {
+                    case .disabled:
                         result(0, nil)
-                    } else if policy == .simpleInterventions {
+                    case .simpleInterventions:
                         result(1, nil)
-                    } else if policy == .descriptiveInterventions {
+                    case .descriptiveInterventions:
                         result(2, nil)
+                    default:
+                        break
                     }
                 }
             }

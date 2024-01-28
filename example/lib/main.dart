@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:dio/dio.dart';
 import 'package:file_selector/file_selector.dart';
@@ -47,13 +48,14 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> analyzeNetworkImage(String? url) async {
+  Future<void> analyzeNetworkImage() async {
     try {
-      if (url != null) {
-        // Analyze the image for sensitive content.
-        bool? isSensitive = await sca.analyzeNetworkImage(url: url);
-        debugPrint("SENSITIVE: $isSensitive");
-      }
+      const url =
+          "https://docs-assets.developer.apple.com/published/517e263450/rendered2x-1685188934.png";
+
+      // Analyze the image for sensitive content.
+      bool? isSensitive = await sca.analyzeNetworkImage(url: url);
+      debugPrint("SENSITIVE: $isSensitive");
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -97,41 +99,41 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  checkPolicy() async {
+  Future<void> checkPolicy() async {
     int? policy = await sca.checkPolicy();
     debugPrint("Policy: $policy");
   }
 
-  final String? analyzeUrl =
-      "https://docs-assets.developer.apple.com/published/517e263450/rendered2x-1685188934.png";
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData.dark(),
       home: Scaffold(
+        backgroundColor: Colors.black,
         appBar: AppBar(
+          backgroundColor: Colors.transparent,
           title: const Text('Plugin example app'),
         ),
         body: Center(
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            ElevatedButton(
+            TextButton(
               onPressed: () async => await analyzeImage(),
               child: const Text("Select Image."),
             ),
-            ElevatedButton(
-              onPressed: () async => await analyzeNetworkImage(analyzeUrl),
+            TextButton(
+              onPressed: () async => await analyzeNetworkImage(),
               child: const Text("Select Network Image."),
             ),
-            ElevatedButton(
+            TextButton(
               onPressed: () async => await analyzeNetworkVideo(),
               child: const Text("Analyze Downloaded Video."),
             ),
-            ElevatedButton(
+            TextButton(
               onPressed: () async => await analyzeLocalVideo(),
               child: const Text("Analyze Selected Video."),
             ),
-            ElevatedButton(
-              onPressed: () => checkPolicy(),
+            TextButton(
+              onPressed: () async => await checkPolicy(),
               child: const Text("Check Policy."),
             ),
           ]),
