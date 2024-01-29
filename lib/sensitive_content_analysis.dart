@@ -35,7 +35,7 @@ class SensitiveContentAnalysis {
   Future<bool?> analyzeVideo({required String url}) async {
     try {
       final dynamic isSensitive = await methodChannel
-          .invokeMethod('analyzeVideo', {"url": Uri.file(url)});
+          .invokeMethod('analyzeVideo', {"url": Uri.file(url).toString()});
       return isSensitive;
     } on PlatformException catch (e) {
       throw UnimplementedError(e.message);
