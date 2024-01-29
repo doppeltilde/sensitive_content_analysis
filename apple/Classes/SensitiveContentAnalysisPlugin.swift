@@ -1,4 +1,6 @@
+#if canImport(SensitiveContentAnalysis)
 import SensitiveContentAnalysis
+#endif
 
 #if os(iOS)
 import Flutter
@@ -22,93 +24,194 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
 
     @available(iOS 17.0, macOS 14.0, *)
     private func analyzeImage(image: FlutterStandardTypedData, result: @escaping (Bool?, Error?) -> Void) {
-        Task {
-            do {
-                let analyzer = try SCSensitivityAnalyzer()
+        DispatchQueue.global(qos: .userInteractive).async {
+            Task {
+                let analyzer = SCSensitivityAnalyzer()
                 let policy = analyzer.analysisPolicy
 
                 if policy == .disabled {
-                    return result(nil, nil)
+                    DispatchQueue.main.async {
+                        result(nil, nil)
+                    }
                 } else {
                     #if os(iOS)
                     guard let uiImage = UIImage(data: image.data) else {
-                        return result(nil, nil)
+                        DispatchQueue.main.async {
+                            result(nil, nil)
+                        }
+                        return
                     }
 
                     if let cgImage = uiImage.cgImage {
-                        let analysisResult = try await analyzer.analyzeImage(cgImage)
-                        let isSensitive = analysisResult.isSensitive
-                        return result(isSensitive, nil)
+                        Task {
+                            do {
+                                let analysisResult = try await analyzer.analyzeImage(cgImage)
+                                let isSensitive = analysisResult.isSensitive
+                                DispatchQueue.main.async {
+                                    result(isSensitive, nil)
+                                }
+                            } catch let error {
+                                DispatchQueue.main.async {
+                                    result(nil, error)
+                                }
+                            }
+                        }
+                    } else {
+                        DispatchQueue.main.async {
+                            result(nil, nil)
+                        }
                     }
                     #elseif os(macOS)
                     guard let nsImage = NSImage(data: image.data) else {
-                        return result(nil, nil)
+                        DispatchQueue.main.async {
+                            result(nil, nil)
+                        }
+                        return
                     }
 
                     if let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-                        let analysisResult = try await analyzer.analyzeImage(cgImage)
-                        let isSensitive = analysisResult.isSensitive
-                        return result(isSensitive, nil)
+                        Task {
+                            do {
+                                let analysisResult = try await analyzer.analyzeImage(cgImage)
+                                let isSensitive = analysisResult.isSensitive
+                                DispatchQueue.main.async {
+                                    result(isSensitive, nil)
+                                }
+                            } catch let error {
+                                DispatchQueue.main.async {
+                                    result(nil, error)
+                                }
+                            }
+                        }
+                    } else {
+                        DispatchQueue.main.async {
+                            result(nil, nil)
+                        }
                     }
                     #endif
                 }
-            } catch let error {
-                return result(nil, error)
             }
         }
     }
 
-
     @available(iOS 17.0, macOS 14.0, *)
-    private func analyzeNetworkImage(at fileURL: URL, result: @escaping (Bool?, Error?) -> Void) {
-        Task {
-            do {
-                let analyzer = try SCSensitivityAnalyzer()
+    private func analyzeVideo(at fileURL: URL, result: @escaping (Bool?, Error?) -> Void) {
+    DispatchQueue.global(qos: .userInteractive).async {
+            Task {
+                let analyzer = SCSensitivityAnalyzer()
                 let policy = analyzer.analysisPolicy
 
                 if policy == .disabled {
-                    result(nil, nil)
+                    DispatchQueue.main.async {
+                        result(nil, nil)
+                    }
                 } else {
-                    #if os(iOS)
-                    if let data = try? Data(contentsOf: fileURL),
-                    let uiImage = UIImage(data: data),
-                    let cgImage = uiImage.cgImage {
-                        let analysisResult = try await analyzer.analyzeImage(cgImage)
-                        let isSensitive = analysisResult.isSensitive
-                        result(isSensitive, nil)
-                    } else {
-                        result(nil, nil)
-                    }
-                    #elseif os(macOS)
-                    if let data = try? Data(contentsOf: fileURL),
-                    let nsImage = NSImage(data: data) {
-                        if let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-                            let analysisResult = try await analyzer.analyzeImage(cgImage)
+                    Task {
+                        do {
+                            let handler = analyzer.videoAnalysis(forFileAt: fileURL)
+                            let analysisResult = try await handler.hasSensitiveContent()
                             let isSensitive = analysisResult.isSensitive
-                            result(isSensitive, nil)
+
+                            DispatchQueue.main.async {
+                                result(isSensitive, nil)
+                            }
+                        } catch let error {
+                            DispatchQueue.main.async {
+                                result(nil, error)
+                            }
                         }
-                    } else {
-                        result(nil, nil)
                     }
-                    #endif
                 }
-            } catch let error {
-                result(nil, error)
             }
         }
     }
 
+    @available(iOS 17.0, macOS 14.0, *)
+    private func analyzeNetworkImage(at fileURL: URL, result: @escaping (Bool?, Error?) -> Void) {
+        DispatchQueue.global(qos: .userInteractive).async {
+            do {
+                let analyzer = SCSensitivityAnalyzer()
+                let policy = analyzer.analysisPolicy
+
+                if policy == .disabled {
+                    DispatchQueue.main.async {
+                        result(nil, nil)
+                    }
+                } else {
+                    #if os(iOS)
+                    if let data = try? Data(contentsOf: fileURL, options: [.mappedIfSafe, .uncached]),
+                    let uiImage = UIImage(data: data),
+                    let cgImage = uiImage.cgImage {
+                        Task {
+                            do {
+                                let analysisResult = try await analyzer.analyzeImage(cgImage)
+                                let isSensitive = analysisResult.isSensitive
+                                DispatchQueue.main.async {
+                                    result(isSensitive, nil)
+                                }
+                            } catch let error {
+                                DispatchQueue.main.async {
+                                    result(nil, error)
+                                }
+                            }
+                        }
+                    } else {
+                        DispatchQueue.main.async {
+                            result(nil, nil)
+                        }
+                    }
+                    #elseif os(macOS)
+                    if let data = try? Data(contentsOf: fileURL, options: [.mappedIfSafe, .uncached]),
+                    let nsImage = NSImage(data: data) {
+                        if let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                            Task {
+                                do {
+                                    let analysisResult = try await analyzer.analyzeImage(cgImage)
+                                    let isSensitive = analysisResult.isSensitive
+                                    DispatchQueue.main.async {
+                                        result(isSensitive, nil)
+                                    }
+                                } catch let error {
+                                    DispatchQueue.main.async {
+                                        result(nil, error)
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        DispatchQueue.main.async {
+                            result(nil, nil)
+                        }
+                    }
+                    #endif
+                }
+            } catch let error {
+                DispatchQueue.main.async {
+                    result(nil, error)
+                }
+            }
+        }
+    }
 
     @available(iOS 17.0, macOS 14.0, *)
     private func checkPolicy(result: @escaping (Int?, Error?) -> Void) {
-        let analyzer = try SCSensitivityAnalyzer()
-        // Check the current analysis policy. 
-        let policy = analyzer.analysisPolicy
-        if policy == .disabled { return result(0, nil) } 
-        else if policy == .simpleInterventions {
-            return result(1, nil)
-        } else if policy == .descriptiveInterventions {
-            return result(2, nil)
+        DispatchQueue.global(qos: .userInitiated).async {
+            Task {
+                let analyzer = SCSensitivityAnalyzer()
+                let policy = analyzer.analysisPolicy
+                DispatchQueue.main.async {
+                    switch policy {
+                    case .disabled:
+                        result(0, nil)
+                    case .simpleInterventions:
+                        result(1, nil)
+                    case .descriptiveInterventions:
+                        result(2, nil)
+                    default:
+                        break
+                    }
+                }
+            }
         }
     }
 
@@ -116,6 +219,25 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
         if #available(iOS 17.0, macOS 14.0, *) {
             // Handle Flutter method calls
             switch call.method {
+
+            case "analyzeVideo":
+                guard let args = call.arguments else {
+                    return result(FlutterError(code: "-1", message: "Could not recognize flutter arguments in method: \(call.method)", details: nil))
+                }
+                if let myArgs = args as? [String: Any],
+                let urlString = myArgs["url"] as? String,
+                let url = URL(string: urlString) {
+                    analyzeVideo(at: url) { isSensitive, error in
+                        if let error = error {
+                            result(FlutterError(code: "ERROR", message: "\(error)", details: nil))
+                        } else {
+                            result(isSensitive)
+                        }
+                    }
+                } else {
+                    result(FlutterError(code: "-1", message: "Could not recognize flutter arguments in method: \(call.method)", details: nil))
+                }
+
             case "analyzeNetworkImage":
                 guard let args = call.arguments else {
                     return result(FlutterError(code: "-1", message: "Could not recognize flutter arguments in method: \(call.method)", details: nil))

@@ -1,3 +1,14 @@
+## 1.1.0
+- Feat: `Video Analysis` added.
+
+## 1.0.4
+- Added privacy manifest.
+
+## 1.0.2
+
+- Fixed: When handling tasks that could potentially cause an app to hang or
+  crash due to long-running operations or heavy computations on the main thread.
+
 ## 1.0.0
 
 - Feat: `macOS` Platform.
