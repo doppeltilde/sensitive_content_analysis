@@ -1,4 +1,6 @@
+#if canImport(SensitiveContentAnalysis)
 import SensitiveContentAnalysis
+#endif
 
 #if os(iOS)
 import Flutter
