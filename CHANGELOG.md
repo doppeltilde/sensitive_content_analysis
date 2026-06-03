@@ -1,3 +1,6 @@
+## 2.0.0
+- Support for Swift Package Manager.
+
 ## 1.1.1
 - Feat: `Video Analysis` added.
 
