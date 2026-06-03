@@ -1,4 +1,4 @@
-## 1.1.0
+## 1.1.1
 - Feat: `Video Analysis` added.
 
 ## 1.0.4

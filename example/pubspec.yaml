@@ -11,11 +11,11 @@ dependencies:
 
   sensitive_content_analysis:
     path: ../
-  cupertino_icons: ^1.0.2
-  image_picker: ^1.0.7
-  file_selector: ^1.0.2
-  path_provider: ^2.1.2
-  dio: ^5.4.0
+  cupertino_icons: ^1.0.9
+  image_picker: ^1.2.2
+  file_picker: 12.0.0-beta.3 #^11.0.2
+  path_provider: ^2.1.5
+  dio: ^5.9.2
 
 dev_dependencies:
   integration_test:
@@ -23,7 +23,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_lints: ^3.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true

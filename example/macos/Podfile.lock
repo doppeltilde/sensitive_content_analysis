@@ -25,11 +25,11 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/sensitive_content_analysis/macos
 
 SPEC CHECKSUMS:
-  file_selector_macos: 468fb6b81fac7c0e88d71317f3eec34c3b008ff9
-  FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
-  path_provider_foundation: 3784922295ac71e43754bd15e0653ccfd36a147c
-  sensitive_content_analysis: a59530f1818d66b05d8d139ee9739805db0d2f31
+  file_selector_macos: 660f7672ee62dad6df1bb0cbdb90a10ce3f946df
+  FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
+  path_provider_foundation: 608fcb11be570ce83519b076ab6a1fffe2474f05
+  sensitive_content_analysis: 00182a342b1e6ee570373d73573f7bc9ee4fe690
 
 PODFILE CHECKSUM: 6acf97521436d16fc31cd5e1a02000905acdb3ae
 
-COCOAPODS: 1.14.3
+COCOAPODS: 1.16.2

@@ -10,7 +10,7 @@ import FlutterMacOS
 import AppKit
 #endif
 
-public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
+@objc public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
     
     public static func register(with registrar: FlutterPluginRegistrar) {
          #if os(iOS)

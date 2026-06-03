@@ -19,7 +19,7 @@ Lower deployment versions may be targeted, however, it's important to note that 
 #### Other Notice's
 
 - In order to maintain the package's lightweight nature and grant you complete control over your UI's appearance, this package intentionally refrains from incorporating an overlay or blur feature.
-- The framework only works on physical devices. [#3](https://github.com/tiltedcube/sensitive_content_analysis/issues/3)
+- The framework only works on physical devices. [#3](https://github.com/doppeltilde/sensitive_content_analysis/issues/3)
 
 ---
 
@@ -186,11 +186,6 @@ final String? analyzeUrl = "https://docs-assets.developer.apple.com/published/51
     }
   }
 ```
-
----
-
-### Apps using:
-<a href="https://apps.apple.com/us/app/id6471840114"><img src="https://play-lh.googleusercontent.com/FSXy-5Yz14YlxIcivLwy0dUfdP8iMSSkkArFDNtNvT5KBeQMvHbxbvaXbmnuJI41xOo" width="64px"></img></a>
 
 ---
 
