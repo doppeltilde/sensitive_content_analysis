@@ -1,289 +1,256 @@
 #if canImport(SensitiveContentAnalysis)
-import SensitiveContentAnalysis
+    import SensitiveContentAnalysis
 #endif
 
 #if os(iOS)
-import Flutter
-import UIKit
+    import Flutter
+    import UIKit
 #else
-import FlutterMacOS
-import AppKit
+    import FlutterMacOS
+    import AppKit
 #endif
 
+@MainActor
 @objc public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
-    
+
     public static func register(with registrar: FlutterPluginRegistrar) {
-         #if os(iOS)
- 		let channel = FlutterMethodChannel(name: "sensitive_content_analysis", binaryMessenger: registrar.messenger())
- 	    #else
- 		let channel = FlutterMethodChannel(name: "sensitive_content_analysis", binaryMessenger: registrar.messenger)
- 	    #endif
+        #if os(iOS)
+            let messenger = registrar.messenger()
+        #else
+            let messenger = registrar.messenger
+        #endif
+
+        let channel = FlutterMethodChannel(
+            name: "sensitive_content_analysis",
+            binaryMessenger: messenger
+        )
+
         let instance = SensitiveContentAnalysisPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
 
+    private var _analyzer: Any?
+
     @available(iOS 17.0, macOS 14.0, *)
-    private func analyzeImage(image: FlutterStandardTypedData, result: @escaping (Bool?, Error?) -> Void) {
-        DispatchQueue.global(qos: .userInteractive).async {
-            Task {
-                let analyzer = SCSensitivityAnalyzer()
-                let policy = analyzer.analysisPolicy
-
-                if policy == .disabled {
-                    DispatchQueue.main.async {
-                        result(nil, nil)
-                    }
-                } else {
-                    #if os(iOS)
-                    guard let uiImage = UIImage(data: image.data) else {
-                        DispatchQueue.main.async {
-                            result(nil, nil)
-                        }
-                        return
-                    }
-
-                    if let cgImage = uiImage.cgImage {
-                        Task {
-                            do {
-                                let analysisResult = try await analyzer.analyzeImage(cgImage)
-                                let isSensitive = analysisResult.isSensitive
-                                DispatchQueue.main.async {
-                                    result(isSensitive, nil)
-                                }
-                            } catch let error {
-                                DispatchQueue.main.async {
-                                    result(nil, error)
-                                }
-                            }
-                        }
-                    } else {
-                        DispatchQueue.main.async {
-                            result(nil, nil)
-                        }
-                    }
-                    #elseif os(macOS)
-                    guard let nsImage = NSImage(data: image.data) else {
-                        DispatchQueue.main.async {
-                            result(nil, nil)
-                        }
-                        return
-                    }
-
-                    if let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-                        Task {
-                            do {
-                                let analysisResult = try await analyzer.analyzeImage(cgImage)
-                                let isSensitive = analysisResult.isSensitive
-                                DispatchQueue.main.async {
-                                    result(isSensitive, nil)
-                                }
-                            } catch let error {
-                                DispatchQueue.main.async {
-                                    result(nil, error)
-                                }
-                            }
-                        }
-                    } else {
-                        DispatchQueue.main.async {
-                            result(nil, nil)
-                        }
-                    }
-                    #endif
-                }
-            }
+    private var analyzer: SCSensitivityAnalyzer {
+        if let existing = _analyzer as? SCSensitivityAnalyzer {
+            return existing
         }
+
+        let newAnalyzer = SCSensitivityAnalyzer()
+        _analyzer = newAnalyzer
+        return newAnalyzer
+    }
+
+    private func cgImage(from data: Data) -> CGImage? {
+        #if os(iOS)
+            return UIImage(data: data)?.cgImage
+        #elseif os(macOS)
+            guard let nsImage = NSImage(data: data) else { return nil }
+            var imageRect = CGRect(
+                x: 0, y: 0, width: nsImage.size.width, height: nsImage.size.height)
+            return nsImage.cgImage(
+                forProposedRect: &imageRect,
+                context: nil,
+                hints: nil
+            )
+        #endif
     }
 
     @available(iOS 17.0, macOS 14.0, *)
-    private func analyzeVideo(at fileURL: URL, result: @escaping (Bool?, Error?) -> Void) {
-    DispatchQueue.global(qos: .userInteractive).async {
-            Task {
-                let analyzer = SCSensitivityAnalyzer()
-                let policy = analyzer.analysisPolicy
+    private func analyzeImage(
+        image: FlutterStandardTypedData,
+        result: @escaping FlutterResult
+    ) {
+        let analyzer = self.analyzer
 
-                if policy == .disabled {
-                    DispatchQueue.main.async {
-                        result(nil, nil)
-                    }
-                } else {
-                    Task {
-                        do {
-                            let handler = analyzer.videoAnalysis(forFileAt: fileURL)
-                            let analysisResult = try await handler.hasSensitiveContent()
-                            let isSensitive = analysisResult.isSensitive
-
-                            DispatchQueue.main.async {
-                                result(isSensitive, nil)
-                            }
-                        } catch let error {
-                            DispatchQueue.main.async {
-                                result(nil, error)
-                            }
-                        }
-                    }
-                }
+        Task(priority: .userInitiated) {
+            guard analyzer.analysisPolicy != .disabled else {
+                await MainActor.run { result(nil) }
+                return
             }
-        }
-    }
 
-    @available(iOS 17.0, macOS 14.0, *)
-    private func analyzeNetworkImage(at fileURL: URL, result: @escaping (Bool?, Error?) -> Void) {
-        DispatchQueue.global(qos: .userInteractive).async {
+            guard let cgImage = cgImage(from: image.data) else {
+                await MainActor.run { result(nil) }
+                return
+            }
+
             do {
-                let analyzer = SCSensitivityAnalyzer()
-                let policy = analyzer.analysisPolicy
+                let analysisResult = try await analyzer.analyzeImage(cgImage)
 
-                if policy == .disabled {
-                    DispatchQueue.main.async {
-                        result(nil, nil)
-                    }
-                } else {
-                    #if os(iOS)
-                    if let data = try? Data(contentsOf: fileURL, options: [.mappedIfSafe, .uncached]),
-                    let uiImage = UIImage(data: data),
-                    let cgImage = uiImage.cgImage {
-                        Task {
-                            do {
-                                let analysisResult = try await analyzer.analyzeImage(cgImage)
-                                let isSensitive = analysisResult.isSensitive
-                                DispatchQueue.main.async {
-                                    result(isSensitive, nil)
-                                }
-                            } catch let error {
-                                DispatchQueue.main.async {
-                                    result(nil, error)
-                                }
-                            }
-                        }
-                    } else {
-                        DispatchQueue.main.async {
-                            result(nil, nil)
-                        }
-                    }
-                    #elseif os(macOS)
-                    if let data = try? Data(contentsOf: fileURL, options: [.mappedIfSafe, .uncached]),
-                    let nsImage = NSImage(data: data) {
-                        if let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-                            Task {
-                                do {
-                                    let analysisResult = try await analyzer.analyzeImage(cgImage)
-                                    let isSensitive = analysisResult.isSensitive
-                                    DispatchQueue.main.async {
-                                        result(isSensitive, nil)
-                                    }
-                                } catch let error {
-                                    DispatchQueue.main.async {
-                                        result(nil, error)
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        DispatchQueue.main.async {
-                            result(nil, nil)
-                        }
-                    }
-                    #endif
+                await MainActor.run {
+                    result(analysisResult.isSensitive)
                 }
-            } catch let error {
-                DispatchQueue.main.async {
-                    result(nil, error)
+            } catch {
+                await MainActor.run {
+                    result(
+                        FlutterError(
+                            code: "analysis_error",
+                            message: "Failed to analyze image",
+                            details: error.localizedDescription
+                        )
+                    )
                 }
             }
         }
     }
 
     @available(iOS 17.0, macOS 14.0, *)
-    private func checkPolicy(result: @escaping (Int?, Error?) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            Task {
-                let analyzer = SCSensitivityAnalyzer()
-                let policy = analyzer.analysisPolicy
-                DispatchQueue.main.async {
-                    switch policy {
-                    case .disabled:
-                        result(0, nil)
-                    case .simpleInterventions:
-                        result(1, nil)
-                    case .descriptiveInterventions:
-                        result(2, nil)
-                    default:
-                        break
-                    }
+    private func analyzeVideo(
+        at fileURL: URL,
+        result: @escaping FlutterResult
+    ) {
+        let analyzer = self.analyzer
+
+        Task(priority: .userInitiated) {
+            guard analyzer.analysisPolicy != .disabled else {
+                await MainActor.run { result(nil) }
+                return
+            }
+
+            do {
+                let handler = analyzer.videoAnalysis(forFileAt: fileURL)
+                let analysisResult = try await handler.hasSensitiveContent()
+
+                await MainActor.run {
+                    result(analysisResult.isSensitive)
+                }
+            } catch {
+                await MainActor.run {
+                    result(
+                        FlutterError(
+                            code: "analysis_error",
+                            message: "Failed to analyze video",
+                            details: error.localizedDescription
+                        )
+                    )
                 }
             }
         }
     }
 
-    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        if #available(iOS 17.0, macOS 14.0, *) {
-            // Handle Flutter method calls
-            switch call.method {
+    @available(iOS 17.0, macOS 14.0, *)
+    private func analyzeNetworkImage(
+        at url: URL,
+        result: @escaping FlutterResult
+    ) {
+        let analyzer = self.analyzer
 
-            case "analyzeVideo":
-                guard let args = call.arguments else {
-                    return result(FlutterError(code: "-1", message: "Could not recognize flutter arguments in method: \(call.method)", details: nil))
-                }
-                if let myArgs = args as? [String: Any],
-                let urlString = myArgs["url"] as? String,
-                let url = URL(string: urlString) {
-                    analyzeVideo(at: url) { isSensitive, error in
-                        if let error = error {
-                            result(FlutterError(code: "ERROR", message: "\(error)", details: nil))
-                        } else {
-                            result(isSensitive)
-                        }
-                    }
-                } else {
-                    result(FlutterError(code: "-1", message: "Could not recognize flutter arguments in method: \(call.method)", details: nil))
-                }
+        Task(priority: .userInitiated) {
+            guard analyzer.analysisPolicy != .disabled else {
+                await MainActor.run { result(nil) }
+                return
+            }
 
-            case "analyzeNetworkImage":
-                guard let args = call.arguments else {
-                    return result(FlutterError(code: "-1", message: "Could not recognize flutter arguments in method: \(call.method)", details: nil))
-                }
-                if let myArgs = args as? [String: Any],
-                let urlString = myArgs["url"] as? String,
-                let url = URL(string: urlString) {
-                    analyzeNetworkImage(at: url) { isSensitive, error in
-                        if let error = error {
-                            result(FlutterError(code: "ERROR", message: error.localizedDescription, details: nil))
-                        } else {
-                            result(isSensitive)
-                        }
-                    }
-                } else {
-                    result(FlutterError(code: "-1", message: "Could not recognize flutter arguments in method: \(call.method)", details: nil))
-                }
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
 
-            case "analyzeImage":
-                guard let image = call.arguments as? FlutterStandardTypedData else {
-                    result(FlutterError(code: "invalid_arguments", message: "Invalid image data", details: nil))
+                guard let cgImage = cgImage(from: data) else {
+                    await MainActor.run { result(nil) }
                     return
                 }
-                    analyzeImage(image: image) { isSensitive, error in
-                        if let error = error {
-                            result(FlutterError(code: "analysis_error", message: "Failed to analyze image", details: error.localizedDescription))
-                        } else {
-                            result(isSensitive)
-                        }
-                }
-        
-            case "checkPolicy":
-                checkPolicy { policyResult, error in
-                    if let error = error {
-                        result(FlutterError(code: "ERROR", message: error.localizedDescription, details: nil))
-                    } else if let policyResult = policyResult {
-                        result(policyResult)
-                    } else {
-                        result(FlutterError(code: "UNEXPECTED_ERROR", message: "Unexpected error occurred", details: nil))
-                    }
-                }
 
-            default:
-                result(FlutterMethodNotImplemented)
+                let analysisResult = try await analyzer.analyzeImage(cgImage)
+
+                await MainActor.run {
+                    result(analysisResult.isSensitive)
+                }
+            } catch {
+                await MainActor.run {
+                    result(
+                        FlutterError(
+                            code: "analysis_error",
+                            message: "Failed to analyze network image",
+                            details: error.localizedDescription
+                        )
+                    )
+                }
             }
-        } else {
+        }
+    }
+
+    @available(iOS 17.0, macOS 14.0, *)
+    private func checkPolicy(result: @escaping FlutterResult) {
+        switch analyzer.analysisPolicy {
+        case .disabled:
+            result(0)
+        case .simpleInterventions:
+            result(1)
+        case .descriptiveInterventions:
+            result(2)
+        @unknown default:
+            result(
+                FlutterError(
+                    code: "unknown_policy",
+                    message: "Unrecognized AnalysisPolicy value",
+                    details: nil
+                )
+            )
+        }
+    }
+
+    public func handle(
+        _ call: FlutterMethodCall,
+        result: @escaping FlutterResult
+    ) {
+        guard #available(iOS 17.0, macOS 14.0, *) else {
+            result(FlutterMethodNotImplemented)
+            return
+        }
+
+        switch call.method {
+
+        case "analyzeImage":
+            guard let image = call.arguments as? FlutterStandardTypedData else {
+                result(
+                    FlutterError(
+                        code: "invalid_arguments",
+                        message: "Expected FlutterStandardTypedData for image",
+                        details: nil
+                    )
+                )
+                return
+            }
+            analyzeImage(image: image, result: result)
+
+        case "analyzeVideo":
+            guard
+                let args = call.arguments as? [String: Any],
+                let urlString = args["url"] as? String,
+                let url = URL(string: urlString)
+            else {
+                result(
+                    FlutterError(
+                        code: "invalid_arguments",
+                        message: "Expected a valid 'url' string argument",
+                        details: nil
+                    )
+                )
+                return
+            }
+            analyzeVideo(at: url, result: result)
+
+        case "analyzeNetworkImage":
+            guard
+                let args = call.arguments as? [String: Any],
+                let urlString = args["url"] as? String,
+                let url = URL(string: urlString)
+            else {
+                result(
+                    FlutterError(
+                        code: "invalid_arguments",
+                        message: "Expected a valid 'url' string argument",
+                        details: nil
+                    )
+                )
+                return
+            }
+            analyzeNetworkImage(at: url, result: result)
+
+        case "checkPolicy":
+            checkPolicy(result: result)
+
+        default:
             result(FlutterMethodNotImplemented)
         }
     }
