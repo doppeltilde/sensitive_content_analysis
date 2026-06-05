@@ -6,7 +6,7 @@ let package = Package(
     name: "sensitive_content_analysis",
     platforms: [
         .iOS("13.0"),
-        .macOS("12.0")
+        .macOS("12.0"),
     ],
     products: [
         .library(
@@ -14,19 +14,20 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(name: "FlutterFramework", path: "../FlutterFramework"),
+        .package(path: "../FlutterFramework")
     ],
     targets: [
         .target(
             name: "sensitive_content_analysis",
             dependencies: [
-                .product(name: "FlutterFramework", package: "FlutterFramework"),
+                .product(name: "FlutterFramework", package: "FlutterFramework")
             ],
+            path: ".",
             resources: [],
             linkerSettings: [
                 .linkedFramework("Flutter", .when(platforms: [.iOS])),
                 .linkedFramework("FlutterMacOS", .when(platforms: [.macOS])),
-                .linkedFramework("SensitiveContentAnalysis", .when(platforms: [.iOS, .macOS]))
+                .linkedFramework("SensitiveContentAnalysis", .when(platforms: [.iOS, .macOS])),
             ]
         )
     ]
