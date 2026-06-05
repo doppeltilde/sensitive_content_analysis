@@ -1,1 +1,0 @@
-../../darwin/sensitive_content_analysis/Sources/sensitive_content_analysis/SensitiveContentAnalysisPlugin.swift

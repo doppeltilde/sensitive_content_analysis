@@ -1,3 +1,5 @@
+## 2.0.2
+- Fix: Data Race & Main Thread Violation
 ## 2.0.0
 - Support for Swift Package Manager.
 
