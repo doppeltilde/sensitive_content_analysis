@@ -10,8 +10,7 @@
   import AppKit
 #endif
 
-@MainActor
-@objc public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
+public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     #if os(iOS)
@@ -62,9 +61,9 @@
     image: FlutterStandardTypedData,
     result: @escaping FlutterResult
   ) {
-    let analyzer = self.analyzer
-
     Task(priority: .userInitiated) {
+      let analyzer = await MainActor.run { self.analyzer }
+
       guard analyzer.analysisPolicy != .disabled else {
         await MainActor.run { result(nil) }
         return
@@ -100,9 +99,9 @@
     at fileURL: URL,
     result: @escaping FlutterResult
   ) {
-    let analyzer = self.analyzer
-
     Task(priority: .userInitiated) {
+      let analyzer = await MainActor.run { self.analyzer }
+
       guard analyzer.analysisPolicy != .disabled else {
         await MainActor.run { result(nil) }
         return
@@ -134,9 +133,9 @@
     at url: URL,
     result: @escaping FlutterResult
   ) {
-    let analyzer = self.analyzer
-
     Task(priority: .userInitiated) {
+      let analyzer = await MainActor.run { self.analyzer }
+
       guard analyzer.analysisPolicy != .disabled else {
         await MainActor.run { result(nil) }
         return
@@ -171,21 +170,24 @@
 
   @available(iOS 17.0, macOS 14.0, *)
   private func checkPolicy(result: @escaping FlutterResult) {
-    switch analyzer.analysisPolicy {
-    case .disabled:
-      result(0)
-    case .simpleInterventions:
-      result(1)
-    case .descriptiveInterventions:
-      result(2)
-    @unknown default:
-      result(
-        FlutterError(
-          code: "unknown_policy",
-          message: "Unrecognized AnalysisPolicy value",
-          details: nil
+    Task { @MainActor in
+      let analyzer = self.analyzer
+      switch analyzer.analysisPolicy {
+      case .disabled:
+        result(0)
+      case .simpleInterventions:
+        result(1)
+      case .descriptiveInterventions:
+        result(2)
+      @unknown default:
+        result(
+          FlutterError(
+            code: "unknown_policy",
+            message: "Unrecognized AnalysisPolicy value",
+            details: nil
+          )
         )
-      )
+      }
     }
   }
 
