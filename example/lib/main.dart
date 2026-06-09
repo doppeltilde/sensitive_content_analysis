@@ -178,13 +178,13 @@ class _MyAppState extends State<MyApp> {
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // Wrap content tightly
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     // 18+ Icon Header
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
+                        color: Colors.red.withValues(alpha: .1),
                         shape: BoxShape.circle,
                       ),
                       child: const Text(
@@ -210,7 +210,6 @@ class _MyAppState extends State<MyApp> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Content Description
                     Text(
                       "The home feed contains content intended for mature audiences. Please verify that you are 18 years or older to proceed.",
                       textAlign: TextAlign.center,
@@ -222,7 +221,6 @@ class _MyAppState extends State<MyApp> {
                     ),
                     const SizedBox(height: 28),
 
-                    // Actions (Stacked for a cleaner, full-bleed button look)
                     SizedBox(
                       width: double.infinity,
                       height: 48,
@@ -236,7 +234,7 @@ class _MyAppState extends State<MyApp> {
                           elevation: 0,
                         ),
                         onPressed: () {
-                          Navigator.pop(context); // Close dialog
+                          Navigator.pop(context);
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -262,7 +260,7 @@ class _MyAppState extends State<MyApp> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () => Navigator.pop(context), // Close dialog
+                        onPressed: () => Navigator.pop(context),
                         child: const Text(
                           "Go Back",
                           style: TextStyle(
