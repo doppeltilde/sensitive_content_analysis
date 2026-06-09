@@ -167,7 +167,7 @@ void main() {
 
       final policy = await mockSca.checkPolicy();
 
-      expect(policy, equals(0));
+      expect(policy, equals(AnalysisPolicy.disabled));
       verify(mockSca.checkPolicy()).called(1);
     });
 
@@ -177,7 +177,7 @@ void main() {
 
       final policy = await mockSca.checkPolicy();
 
-      expect(policy, equals(1));
+      expect(policy, equals(AnalysisPolicy.simpleInterventions));
     });
 
     test('returns null when policy cannot be determined', () async {
@@ -191,10 +191,9 @@ void main() {
     test('throws on policy fetch failure', () async {
       when(mockSca.checkPolicy()).thenThrow(Exception('Policy fetch failed'));
 
-      expect(() => mockSca.checkPolicy(), throwsException);
+      expect(() async => await mockSca.checkPolicy(), throwsException);
     });
   });
-
   group('SensitivityAnalysisResult model', () {
     test('constructs with isSensitive=true', () {
       final result = SensitivityAnalysisResult(
