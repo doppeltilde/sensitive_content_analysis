@@ -3,11 +3,12 @@
 #### Provide a safer experience in your app by detecting and alerting users to nudity in images and videos before displaying them onscreen.
 
 <img src="https://docs-assets.developer.apple.com/published/36d145c8a9/renderedDark2x-1684208404.png" width="500px"/>
-<img src="https://docs-assets.developer.apple.com/published/57e2efdd76/rendered2x-1692659569.png" width="500px" />
+<img src="https://docs-assets.developer.apple.com/published/b266a0fa980fd3b5cc0b3e200e137495/sensitivecontentanalysis-2~dark%402x.png" width="500px" />
+<img src="https://www.apple.com/v/child-safety/overview/a/images/overview/communication/safety__c8aw8hnf4nwy_large_2x.jpg" width="250px" />
 
 [![Pub](https://img.shields.io/pub/v/sensitive_content_analysis.svg?style=popout&include_prereleases)](https://pub.dev/packages/sensitive_content_analysis)
 
-Dart package for interacting with Apple's
+Flutter package for interacting with Apple's
 [SensitiveContentAnalysis Framework](https://developer.apple.com/documentation/sensitivecontentanalysis).
 
 #### Minimum requirements

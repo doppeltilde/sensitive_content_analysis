@@ -25,6 +25,17 @@ import 'package:sensitive_content_analysis/sensitive_content_analysis.dart'
 // ignore_for_file: subtype_of_sealed_class
 // ignore_for_file: invalid_use_of_internal_member
 
+class _FakeVideoStreamAnalyzer_0 extends _i1.SmartFake
+    implements _i2.VideoStreamAnalyzer {
+  _FakeVideoStreamAnalyzer_0(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [SensitiveContentAnalysis].
 ///
 /// See the documentation for Mockito's code generation for more information.
@@ -70,11 +81,39 @@ class MockSensitiveContentAnalysis extends _i1.Mock
       ) as _i3.Future<_i2.SensitivityAnalysisResult?>);
 
   @override
-  _i3.Future<int?> checkPolicy() => (super.noSuchMethod(
+  _i3.Future<_i2.AnalysisPolicy?> checkPolicy() => (super.noSuchMethod(
         Invocation.method(
           #checkPolicy,
           [],
         ),
-        returnValue: _i3.Future<int?>.value(),
-      ) as _i3.Future<int?>);
+        returnValue: _i3.Future<_i2.AnalysisPolicy?>.value(),
+      ) as _i3.Future<_i2.AnalysisPolicy?>);
+
+  @override
+  _i3.Future<_i2.VideoStreamAnalyzer> createVideoStreamAnalyzer({
+    required String? participantUUID,
+    required _i2.StreamDirection? streamDirection,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #createVideoStreamAnalyzer,
+          [],
+          {
+            #participantUUID: participantUUID,
+            #streamDirection: streamDirection,
+          },
+        ),
+        returnValue: _i3.Future<_i2.VideoStreamAnalyzer>.value(
+            _FakeVideoStreamAnalyzer_0(
+          this,
+          Invocation.method(
+            #createVideoStreamAnalyzer,
+            [],
+            {
+              #participantUUID: participantUUID,
+              #streamDirection: streamDirection,
+            },
+          ),
+        )),
+      ) as _i3.Future<_i2.VideoStreamAnalyzer>);
 }

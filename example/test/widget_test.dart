@@ -20,8 +20,12 @@ void main() {
     test('returns isSensitive=false for safe image bytes', () async {
       final fakeBytes = Uint8List.fromList([0, 1, 2, 3]);
       when(mockSca.analyzeImage(fakeBytes)).thenAnswer(
-        (_) async =>
-            SensitivityAnalysisResult(isSensitive: false, detectedTypes: []),
+        (_) async => SensitivityAnalysisResult(
+            isSensitive: false,
+            detectedTypes: [],
+            shouldIndicateSensitivity: false,
+            shouldInterruptVideo: false,
+            shouldMuteAudio: false),
       );
 
       final result = await mockSca.analyzeImage(fakeBytes);
@@ -34,8 +38,12 @@ void main() {
     test('returns isSensitive=true for sensitive image bytes', () async {
       final fakeBytes = Uint8List.fromList([255, 254, 253]);
       when(mockSca.analyzeImage(fakeBytes)).thenAnswer(
-        (_) async =>
-            SensitivityAnalysisResult(isSensitive: true, detectedTypes: []),
+        (_) async => SensitivityAnalysisResult(
+            isSensitive: true,
+            detectedTypes: [],
+            shouldIndicateSensitivity: true,
+            shouldInterruptVideo: true,
+            shouldMuteAudio: true),
       );
 
       final result = await mockSca.analyzeImage(fakeBytes);
@@ -68,8 +76,12 @@ void main() {
 
     test('returns isSensitive=false for safe network image', () async {
       when(mockSca.analyzeNetworkImage(url: safeUrl)).thenAnswer(
-        (_) async =>
-            SensitivityAnalysisResult(isSensitive: false, detectedTypes: []),
+        (_) async => SensitivityAnalysisResult(
+            isSensitive: false,
+            detectedTypes: [],
+            shouldIndicateSensitivity: false,
+            shouldInterruptVideo: false,
+            shouldMuteAudio: false),
       );
 
       final result = await mockSca.analyzeNetworkImage(url: safeUrl);
@@ -106,8 +118,12 @@ void main() {
 
     test('returns isSensitive=false for safe video', () async {
       when(mockSca.analyzeVideo(url: videoPath)).thenAnswer(
-        (_) async =>
-            SensitivityAnalysisResult(isSensitive: false, detectedTypes: []),
+        (_) async => SensitivityAnalysisResult(
+            isSensitive: false,
+            detectedTypes: [],
+            shouldIndicateSensitivity: false,
+            shouldInterruptVideo: false,
+            shouldMuteAudio: false),
       );
 
       final result = await mockSca.analyzeVideo(url: videoPath);
@@ -119,8 +135,12 @@ void main() {
 
     test('returns isSensitive=true for flagged video', () async {
       when(mockSca.analyzeVideo(url: videoPath)).thenAnswer(
-        (_) async =>
-            SensitivityAnalysisResult(isSensitive: true, detectedTypes: []),
+        (_) async => SensitivityAnalysisResult(
+            isSensitive: true,
+            detectedTypes: [],
+            shouldIndicateSensitivity: true,
+            shouldInterruptVideo: true,
+            shouldMuteAudio: true),
       );
 
       final result = await mockSca.analyzeVideo(url: videoPath);
@@ -142,7 +162,8 @@ void main() {
 
   group('SensitiveContentAnalysis - checkPolicy', () {
     test('returns policy code 0 (no restrictions)', () async {
-      when(mockSca.checkPolicy()).thenAnswer((_) async => 0);
+      when(mockSca.checkPolicy())
+          .thenAnswer((_) async => AnalysisPolicy.fromInt(0));
 
       final policy = await mockSca.checkPolicy();
 
@@ -151,7 +172,8 @@ void main() {
     });
 
     test('returns policy code 1 (restricted)', () async {
-      when(mockSca.checkPolicy()).thenAnswer((_) async => 1);
+      when(mockSca.checkPolicy())
+          .thenAnswer((_) async => AnalysisPolicy.fromInt(1));
 
       final policy = await mockSca.checkPolicy();
 
@@ -175,14 +197,22 @@ void main() {
 
   group('SensitivityAnalysisResult model', () {
     test('constructs with isSensitive=true', () {
-      final result =
-          SensitivityAnalysisResult(isSensitive: true, detectedTypes: []);
+      final result = SensitivityAnalysisResult(
+          isSensitive: true,
+          detectedTypes: [],
+          shouldIndicateSensitivity: true,
+          shouldInterruptVideo: true,
+          shouldMuteAudio: true);
       expect(result.isSensitive, isTrue);
     });
 
     test('constructs with isSensitive=false', () {
-      final result =
-          SensitivityAnalysisResult(isSensitive: false, detectedTypes: []);
+      final result = SensitivityAnalysisResult(
+          isSensitive: false,
+          detectedTypes: [],
+          shouldIndicateSensitivity: false,
+          shouldInterruptVideo: false,
+          shouldMuteAudio: false);
       expect(result.isSensitive, isFalse);
     });
   });

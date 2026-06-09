@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sensitive_content_analysis/sensitive_content_analysis.dart';
 import 'package:path/path.dart' as p;
 import 'package:sensitive_content_analysis_example/home_feed.dart';
+import 'package:sensitive_content_analysis_example/video_analyzer.dart';
 
 late final SensitiveContentAnalysis sca;
 
@@ -101,8 +102,8 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> checkPolicy() async {
     try {
-      int? policy = await sca.checkPolicy();
-      _showResultDialog("Policy Check", "Policy: $policy");
+      AnalysisPolicy? policy = await sca.checkPolicy();
+      _showResultDialog("Policy Check", "Policy: ${policy?.name}");
     } catch (e) {
       _showResultDialog("Error", e.toString());
     }
@@ -133,6 +134,15 @@ class _MyAppState extends State<MyApp> {
           TextButton(
             onPressed: () async => await analyzeLocalVideo(),
             child: const Text("Analyze Selected Video."),
+          ),
+          TextButton(
+            onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CameraSensitiveAnalysisScreen(
+                      participantUUID: "participantUUIDExample"),
+                )),
+            child: const Text("Analyze Camera Stream."),
           ),
           TextButton(
             onPressed: () async => await checkPolicy(),
