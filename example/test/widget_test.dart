@@ -163,7 +163,7 @@ void main() {
   group('SensitiveContentAnalysis - checkPolicy', () {
     test('returns policy code 0 (no restrictions)', () async {
       when(mockSca.checkPolicy())
-          .thenAnswer((_) async => AnalysisPolicy.fromInt(0));
+          .thenAnswer((_) async => AnalysisPolicy.disabled);
 
       final policy = await mockSca.checkPolicy();
 
@@ -173,7 +173,7 @@ void main() {
 
     test('returns policy code 1 (restricted)', () async {
       when(mockSca.checkPolicy())
-          .thenAnswer((_) async => AnalysisPolicy.fromInt(1));
+          .thenAnswer((_) async => AnalysisPolicy.simpleInterventions);
 
       final policy = await mockSca.checkPolicy();
 
