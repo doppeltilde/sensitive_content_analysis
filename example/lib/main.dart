@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sensitive_content_analysis/sensitive_content_analysis.dart';
 import 'package:path/path.dart' as p;
 import 'package:sensitive_content_analysis_example/home_feed.dart';
-import 'package:sensitive_content_analysis_example/video_analyzer.dart';
+import 'package:sensitive_content_analysis_example/video_stream_analyzer.dart';
 
 late final SensitiveContentAnalysis sca;
 

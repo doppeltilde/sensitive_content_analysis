@@ -57,37 +57,22 @@ https://developer.apple.com/documentation/sensitivecontentanalysis/testing-your-
 ### Check Policy:
 
 ```dart
-final sca = SensitiveContentAnalysis();
+    try {
+      AnalysisPolicy? policy = await sca.checkPolicy();
+      _showResultDialog("Policy Check", "Policy: ${policy?.name}");
+      /// Analysis is disabled; always returns null from analysis methods.
+      /// .disabled
 
-int? policy = await sca.checkPolicy();
-if (policy != null) {
-  return policy;
-}
+      /// Simple interventions (e.g. blurring) are suggested.
+      /// .simpleInterventions
+
+      /// Descriptive interventions with richer guidance are suggested.
+      /// .descriptiveInterventions
+
+    } catch (e) {
+      _showResultDialog("Error", e.toString());
+    }
 ```
-> **case disabled = 0**
-> If disabled the framework doesn’t detect nudity. The system disables sensitive content analysis under any of the following conditions:
-> - The app lacks the necessary com.apple.developer.sensitivecontentanalysis.client entitlement.
-> - Neither the Sensitive Content Warning user preference nor the Communication Safety parental control in Screen Time are active.
-> - The user disables the Sensitive Content Warnings toggle in your app’s Settings.
-
-> **case simpleInterventions = 1**
-> simpleInterventions indicates that the user enables both of the following:
-> - Sensitive Content Warnings user preference
-> - Sensitive Content Warnings in your app’s settings
->
-> When your app detects nudity under this policy, your app needs to:
-> - Keep the intervention minimal by describing the issue briefly and updating your app’s UI unobstructively. For example, consider blurring and annotating the area that otherwise presents the sensitive content versus raising a new fullscreen alert.
-> - Intervene on the receipt of sensitve content over the network but allow the app to transmit content over the network unchecked.
-
-> **case descriptiveInterventions = 2**
-> descriptiveInterventions indicates that the user enables both of the following:
-> - Communication Safety parental control in Screen Time
-> - Sensitive Content Warnings in your app’s settings
->
-> When your app detects nudity under this policy, your app needs to:
-> - Use child-appropriate language, such as broadly understood vocabulary
-> - Present an alert that fills the full screen.
-> - Intervene on the receipt of sensitve content over a network and before transmitting sensitive content over a network.
 
 ### Analyze Image
 
@@ -175,6 +160,10 @@ if (policy != null) {
       _showResultDialog("Error", e.toString());
     }
 ```
+
+#### Video Stream:
+> [!NOTE]  
+> Please refer to the [`video_stream_analyzer`](example/lib/video_stream_analyzer.dart) example.
 
 ### Result
 

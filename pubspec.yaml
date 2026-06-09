@@ -1,18 +1,14 @@
 name: sensitive_content_analysis
 description: "Flutter package for detecting and alerting users to nudity in images and videos before displaying them, utilizing the SensitiveContentAnalysis Framework by Apple."
-version: 2.1.1
+version: 2.1.2
 homepage: https://github.com/doppeltilde/sensitive_content_analysis
 
 topics:
   - nsfw
   - nsfw-detection
   - content-moderation
-  - moderation
   - sensitive-content
   - sensitive-content-analysis
-  - video
-  - image
-  - photo
 
 environment:
   sdk: '>=3.1.0 <4.0.0'

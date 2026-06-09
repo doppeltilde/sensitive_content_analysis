@@ -56,13 +56,44 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
   // MARK: - SCVideoStreamAnalyzer
 
   #if os(iOS)
-    private var _streamAnalyzers: [String: Any] = [:]
+    private var _streamAnalyzers: [String: (analyzer: Any, direction: Int)] = [:]
     private var _streamTasks: [String: Any] = [:]
     private var _streamChannels: [String: FlutterEventChannel] = [:]
 
     @available(iOS 26.0, *)
     private func streamAnalyzer(for uuid: String) -> SCVideoStreamAnalyzer? {
-      return _streamAnalyzers[uuid] as? SCVideoStreamAnalyzer
+      return _streamAnalyzers[uuid]?.analyzer as? SCVideoStreamAnalyzer
+    }
+
+    @available(iOS 26.0, *)
+    private func resetAndRecreateAnalyzer(for participantUUID: String) {
+      guard let config = _streamAnalyzers[participantUUID],
+        let oldAnalyzer = config.analyzer as? SCVideoStreamAnalyzer
+      else {
+        return
+      }
+
+      let directionRaw = config.direction
+      let direction: SCVideoStreamAnalyzer.StreamDirection =
+        directionRaw == 0 ? .outgoing : .incoming
+
+      print("🔄 [Native] Hard resetting SCVideoStreamAnalyzer to clear internal frame cache...")
+      oldAnalyzer.endAnalysis()
+
+      do {
+        let newAnalyzer = try SCVideoStreamAnalyzer(
+          participantUUID: participantUUID,
+          streamDirection: direction
+        )
+
+        _streamAnalyzers[participantUUID] = (analyzer: newAnalyzer, direction: directionRaw)
+
+        if let handler = _streamTasks[participantUUID] as? VideoStreamEventHandler {
+          handler.updateAnalyzer(newAnalyzer)
+        }
+      } catch {
+        print("❌ [Native] Failed to recreate analyzer: \(error.localizedDescription)")
+      }
     }
   #endif
 
@@ -314,7 +345,8 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
           participantUUID: participantUUID,
           streamDirection: direction
         )
-        _streamAnalyzers[participantUUID] = streamAnalyzer
+
+        _streamAnalyzers[participantUUID] = (analyzer: streamAnalyzer, direction: directionRaw)
 
         let handler = VideoStreamEventHandler(
           streamAnalyzer: streamAnalyzer,
@@ -440,6 +472,9 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
       }
 
       streamAnalyzer.continueStream()
+
+      resetAndRecreateAnalyzer(for: participantUUID)
+
       result(nil)
     }
 
@@ -479,9 +514,10 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
 
     @available(iOS 26.0, *)
     private class VideoStreamEventHandler: NSObject, FlutterStreamHandler {
-      private let streamAnalyzer: SCVideoStreamAnalyzer
+      private var streamAnalyzer: SCVideoStreamAnalyzer
       private let formatResult: (SCSensitivityAnalysis) -> [String: Any]?
       private var monitorTask: Task<Void, Never>?
+      private var currentSink: FlutterEventSink?
 
       init(
         streamAnalyzer: SCVideoStreamAnalyzer,
@@ -491,44 +527,39 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
         self.formatResult = formatResult
       }
 
+      func updateAnalyzer(_ newAnalyzer: SCVideoStreamAnalyzer) {
+        self.streamAnalyzer = newAnalyzer
+        if let sink = currentSink {
+          startMonitoring(events: sink)
+        }
+      }
+
       func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink)
         -> FlutterError?
       {
+        self.currentSink = events
+        startMonitoring(events: events)
+        return nil
+      }
+
+      private func startMonitoring(events: @escaping FlutterEventSink) {
         monitorTask?.cancel()
 
         var iterator = streamAnalyzer.analysisChanges.makeAsyncIterator()
 
-        if let current = streamAnalyzer.analysis, let formatted = formatResult(current) {
-          print("📡 [Native] Emitting initial analysis state: isSensitive=\(current.isSensitive)")
-          events(formatted)
-        }
-
-        print("🔄 [Native] Starting analysisChanges listener...")
+        let safeState: [String: Any] = [
+          "isSensitive": false,
+          "detectedTypes": [String](),
+          "shouldIndicateSensitivity": false,
+          "shouldInterruptVideo": false,
+          "shouldMuteAudio": false,
+        ]
+        events(safeState)
 
         monitorTask = Task {
-          print("▶️ [Native] Task started, driving pre-registered iterator...")
-
           do {
             while let analysis = try await iterator.next() {
-              guard !Task.isCancelled else {
-                print("⏹️ [Native] Task cancelled")
-                break
-              }
-
-              var detectedStr = "[]"
-              #if compiler(>=6.4)
-                if #available(iOS 27.0, *) {
-                  detectedStr = "\(analysis.detectedTypes)"
-                }
-              #endif
-
-              print(
-                """
-                📡 [Native] analysisChanges EMITTED →
-                  isSensitive: \(analysis.isSensitive)
-                  shouldInterrupt: \(analysis.shouldInterruptVideo)
-                  detectedTypes: \(detectedStr)
-                """)
+              guard !Task.isCancelled else { break }
 
               if let formatted = formatResult(analysis) {
                 await MainActor.run {
@@ -536,28 +567,17 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
                 }
               }
             }
-
-            print("🔚 [Native] analysisChanges stream ended normally")
-            await MainActor.run { events(FlutterEndOfEventStream) }
           } catch {
             print("❌ [Native] analysisChanges error: \(error.localizedDescription)")
-            await MainActor.run {
-              events(
-                FlutterError(
-                  code: "stream_analysis_error",
-                  message: "Error in analysisChanges stream",
-                  details: error.localizedDescription
-                ))
-            }
           }
         }
-        return nil
       }
 
       func onCancel(withArguments arguments: Any?) -> FlutterError? {
         print("🛑 [Native] onCancel called for stream analyzer")
         monitorTask?.cancel()
         monitorTask = nil
+        currentSink = nil
         return nil
       }
     }

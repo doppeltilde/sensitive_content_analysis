@@ -1,5 +1,8 @@
+## 2.1.2
+- Fix(iOS): Re-initialize video stream analyzer on stream continue.
+
 ## 2.1.1
-- Feat: Video Analyzer.
+- Feat(iOS): Video Stream Analyzer.
 
 ## 2.1.0
 ### Breaking

@@ -88,18 +88,16 @@ class _CameraSensitiveAnalysisScreenState
     _analysisSubscription = _analyzer!.analysisChanges.listen(
       (SensitivityAnalysisResult result) async {
         debugPrint("🔍 Full Analysis Result: $result");
-        debugPrint("${result.isSensitive}");
-        debugPrint("${result.shouldInterruptVideo}");
-        if (result.shouldInterruptVideo) {
+
+        if (result.shouldInterruptVideo && !_isContinuing) {
           if (_cameraController != null &&
               _cameraController!.value.isStreamingImages) {
             await _cameraController!.stopImageStream();
           }
+          setState(() {
+            _isStreamInterrupted = true;
+          });
         }
-        setState(() {
-          _isStreamInterrupted = true;
-          _isContinuing = false;
-        });
       },
       onError: (error) {
         debugPrint('Error caught from analysis EventChannel: $error');
@@ -109,10 +107,21 @@ class _CameraSensitiveAnalysisScreenState
 
   Future<void> _onContinueTapped() async {
     if (_analyzer == null || _isContinuing) return;
-    setState(() => _isContinuing = true);
+
+    setState(() {
+      _isContinuing = true;
+    });
+
     try {
       await _analyzer!.continueStream();
-      setState(() => _isStreamInterrupted = false);
+
+      setState(() {
+        _isStreamInterrupted = false;
+        _isContinuing = false;
+      });
+
+      await Future.delayed(const Duration(milliseconds: 200));
+
       _startFrameStreamingPipeline();
     } catch (e) {
       debugPrint("Failed to continue stream: $e");
@@ -121,7 +130,7 @@ class _CameraSensitiveAnalysisScreenState
   }
 
   DateTime? _lastAnalysisTime;
-  final int _throttleMs = 300;
+  final int _throttleMs = 200;
 
   void _startFrameStreamingPipeline() {
     if (_cameraController == null || !_cameraController!.value.isInitialized) {
