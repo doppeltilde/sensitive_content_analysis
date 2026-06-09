@@ -1,3 +1,6 @@
+## 2.1.1
+- Feat: Video Analyzer.
+
 ## 2.1.0
 ### Breaking
 - `analyzeImage`, `analyzeNetworkImage`, and `analyzeVideo` now return `SensitivityAnalysisResult?` instead of `bool?`.
