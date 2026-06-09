@@ -37,10 +37,10 @@ class _CameraSensitiveAnalysisScreenState
 
   Future<void> _initializeSystem() async {
     final policy = await SensitiveContentAnalysis().checkPolicy();
-    print("Analysis Policy: $policy");
+    debugPrint("Analysis Policy: $policy");
 
     if (policy == AnalysisPolicy.disabled) {
-      print(
+      debugPrint(
           "⚠️ Sensitive content analysis is DISABLED. Check entitlement + device settings.");
     }
     try {
@@ -86,7 +86,7 @@ class _CameraSensitiveAnalysisScreenState
 
     _analysisSubscription = _analyzer!.analysisChanges.listen(
       (SensitivityAnalysisResult result) async {
-        print("🔍 Full Analysis Result: $result");
+        debugPrint("🔍 Full Analysis Result: $result");
         setState(() {
           _isStreamInterrupted = result.shouldInterruptVideo;
         });
@@ -121,9 +121,6 @@ class _CameraSensitiveAnalysisScreenState
         final plane = image.planes[0];
         final Uint8List bytes = plane.bytes;
         final int bytesPerRow = plane.bytesPerRow;
-
-        print(
-            "📤 Sending frame: ${image.width}x   ${image.height}, bytes: ${plane.bytes.length}");
 
         await _analyzer!.analyzeFrame(
           bytes: bytes,
