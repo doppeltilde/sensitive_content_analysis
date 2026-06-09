@@ -15,7 +15,12 @@ import ImageIO
 
 public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
 
-  private static var _cachedMessenger: FlutterBinaryMessenger?
+  private let messenger: FlutterBinaryMessenger
+
+  init(messenger: FlutterBinaryMessenger) {
+    self.messenger = messenger
+    super.init()
+  }
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     #if os(iOS)
@@ -24,14 +29,12 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
       let messenger = registrar.messenger
     #endif
 
-    Self._cachedMessenger = messenger
-
     let channel = FlutterMethodChannel(
       name: "sensitive_content_analysis",
       binaryMessenger: messenger
     )
 
-    let instance = SensitiveContentAnalysisPlugin()
+    let instance = SensitiveContentAnalysisPlugin(messenger: messenger)
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
 
@@ -287,7 +290,6 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
     private func createVideoStreamAnalyzer(
       args: [String: Any],
       result: @escaping FlutterResult,
-      messenger: FlutterBinaryMessenger
     ) {
       guard
         let participantUUID = args["participantUUID"] as? String,
@@ -323,7 +325,7 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
         )
         let eventChannel = FlutterEventChannel(
           name: eventChannelName,
-          binaryMessenger: messenger
+          binaryMessenger: self.messenger
         )
         eventChannel.setStreamHandler(handler)
 
@@ -489,27 +491,27 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
         self.formatResult = formatResult
       }
 
-      func onListen(
-        withArguments arguments: Any?,
-        eventSink events: @escaping FlutterEventSink
-      ) -> FlutterError? {
+      func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink)
+        -> FlutterError?
+      {
         monitorTask?.cancel()
 
-        let analyzer = self.streamAnalyzer
-        let formatter = self.formatResult
+        var iterator = streamAnalyzer.analysisChanges.makeAsyncIterator()
+
+        if let current = streamAnalyzer.analysis, let formatted = formatResult(current) {
+          print("📡 [Native] Emitting initial analysis state: isSensitive=\(current.isSensitive)")
+          events(formatted)
+        }
 
         print("🔄 [Native] Starting analysisChanges listener...")
 
-        monitorTask = Task { [weak self] in
-          guard let self else { return }
-
-          print("▶️ [Native] Task started, waiting for analysisChanges...")
+        monitorTask = Task {
+          print("▶️ [Native] Task started, driving pre-registered iterator...")
 
           do {
-            for try await analysis in self.streamAnalyzer.analysisChanges {
-              print("📡 [Native] >>> analysisChanges EMITTED! isSensitive: \(analysis.isSensitive)")
+            while let analysis = try await iterator.next() {
               guard !Task.isCancelled else {
-                print("⏹️ [Native] Task cancelled during analysisChanges")
+                print("⏹️ [Native] Task cancelled")
                 break
               }
 
@@ -522,13 +524,13 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
 
               print(
                 """
-                📡 [Native] Received analysis event → 
-                  isSensitive: \(analysis.isSensitive), 
-                  shouldInterrupt: \(analysis.shouldInterruptVideo),
+                📡 [Native] analysisChanges EMITTED →
+                  isSensitive: \(analysis.isSensitive)
+                  shouldInterrupt: \(analysis.shouldInterruptVideo)
                   detectedTypes: \(detectedStr)
                 """)
 
-              if let formatted = formatter(analysis) {
+              if let formatted = formatResult(analysis) {
                 await MainActor.run {
                   events(formatted)
                 }
@@ -641,11 +643,9 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
             return
           }
 
-          let messenger = SensitiveContentAnalysisPlugin._cachedMessenger!
-
           switch call.method {
           case "createVideoStreamAnalyzer":
-            createVideoStreamAnalyzer(args: args, result: result, messenger: messenger)
+            createVideoStreamAnalyzer(args: args, result: result)
           case "analyzeVideoStreamFrame":
             analyzeVideoStreamFrame(args: args, result: result)
           case "continueVideoStream":
