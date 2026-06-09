@@ -1,3 +1,5 @@
+import ImageIO
+
 #if canImport(SensitiveContentAnalysis)
   import SensitiveContentAnalysis
 #endif
@@ -42,19 +44,59 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
   }
 
   private func cgImage(from data: Data) -> CGImage? {
-    #if os(iOS)
-      return UIImage(data: data)?.cgImage
-    #elseif os(macOS)
-      guard let nsImage = NSImage(data: data) else { return nil }
-      var imageRect = CGRect(
-        x: 0, y: 0, width: nsImage.size.width, height: nsImage.size.height)
-      return nsImage.cgImage(
-        forProposedRect: &imageRect,
-        context: nil,
-        hints: nil
-      )
-    #endif
+    guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+    return CGImageSourceCreateImageAtIndex(source, 0, nil)
   }
+
+  @available(iOS 17.0, macOS 14.0, *)
+  private func formatAnalysisResult(_ analysisResult: SCSensitivityAnalysis) -> [String: Any] {
+    var detectedTypesArray: [String] = []
+
+    #if compiler(>=6.4)
+      if #available(iOS 27.0, macOS 27.0, *) {
+        if analysisResult.isSensitive {
+          if analysisResult.detectedTypes.contains(.sexuallyExplicit) {
+            detectedTypesArray.append("sexuallyExplicit")
+          }
+          if analysisResult.detectedTypes.contains(.goreOrViolence) {
+            detectedTypesArray.append("goreOrViolence")
+          }
+        }
+      }
+    #endif
+
+    return [
+      "isSensitive": analysisResult.isSensitive,
+      "detectedTypes": detectedTypesArray,
+    ]
+  }
+
+  private actor AnalysisQueue {
+    private var running = 0
+    private let maxConcurrent = 3
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+
+    func acquire() async {
+      if running < maxConcurrent {
+        running += 1
+        return
+      }
+      await withCheckedContinuation { continuation in
+        waiters.append(continuation)
+      }
+    }
+
+    func release() {
+      if !waiters.isEmpty {
+        let next = waiters.removeFirst()
+        next.resume()
+      } else {
+        running = max(0, running - 1)
+      }
+    }
+  }
+
+  private let queue = AnalysisQueue()
 
   @available(iOS 17.0, macOS 14.0, *)
   private func analyzeImage(
@@ -78,7 +120,7 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
         let analysisResult = try await analyzer.analyzeImage(cgImage)
 
         await MainActor.run {
-          result(analysisResult.isSensitive)
+          result(self.formatAnalysisResult(analysisResult))
         }
       } catch {
         await MainActor.run {
@@ -112,7 +154,7 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
         let analysisResult = try await handler.hasSensitiveContent()
 
         await MainActor.run {
-          result(analysisResult.isSensitive)
+          result(self.formatAnalysisResult(analysisResult))
         }
       } catch {
         await MainActor.run {
@@ -134,6 +176,8 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
     result: @escaping FlutterResult
   ) {
     Task(priority: .userInitiated) {
+      await queue.acquire()
+      defer { Task { await queue.release() } }
       let analyzer = await MainActor.run { self.analyzer }
 
       guard analyzer.analysisPolicy != .disabled else {
@@ -152,7 +196,7 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
         let analysisResult = try await analyzer.analyzeImage(cgImage)
 
         await MainActor.run {
-          result(analysisResult.isSensitive)
+          result(self.formatAnalysisResult(analysisResult))
         }
       } catch {
         await MainActor.run {

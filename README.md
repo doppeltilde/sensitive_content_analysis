@@ -93,50 +93,41 @@ if (policy != null) {
 #### File Image:
 
 ```dart
-  try {
-    final sca = SensitiveContentAnalysis();
-    final ImagePicker picker = ImagePicker();
+    try {
+      final ImagePicker picker = ImagePicker();
 
-    // Pick an image.
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      // Pick an image.
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-    if (image != null) {
+      if (image != null) {
         Uint8List imageData = await image.readAsBytes();
 
         // Analyze the image for sensitive content.
-        final bool? isSensitive = await sca.analyzeImage(imageData);
-        if (isSensitive != null) {
-            return isSensitive;
-        } else {
-            debugPrint("Enable ”Sensitive Content Warning” in Settings -> Privacy & Security.");
-            return null;
-        }
+        SensitivityAnalysisResult? isSensitive =
+            await sca.analyzeImage(imageData);
+        _showResultDialog(
+            "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
+      }
+    } catch (e) {
+      _showResultDialog("Error", e.toString());
     }
-  } catch (e) {
-      return null;
-  }
 ```
 
 #### Network Image:
 
 ```dart
-final String? analyzeUrl = "https://docs-assets.developer.apple.com/published/517e263450/rendered2x-1685188934.png";
-
   try {
-    final sca = SensitiveContentAnalysis();
+      const url =
+          "https://docs-assets.developer.apple.com/published/517e263450/rendered2x-1685188934.png";
 
-    if (analyzeUrl != null) {
-        final bool? isSensitive = await sca.analyzeNetworkImage(url: analyzeUrl);
-        if (isSensitive != null) {
-            return isSensitive;
-        } else {
-            debugPrint("Enable ”Sensitive Content Warning” in Settings -> Privacy & Security.");
-            return null;
-        }
+      // Analyze the image for sensitive content.
+      SensitivityAnalysisResult? isSensitive =
+          await sca.analyzeNetworkImage(url: url);
+      _showResultDialog(
+          "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
+    } catch (e) {
+      _showResultDialog("Error", e.toString());
     }
-  } catch (e) {
-      return null;
-  }
 ```
 
 ### Analyze Video
@@ -144,7 +135,6 @@ final String? analyzeUrl = "https://docs-assets.developer.apple.com/published/51
 #### Network Video:
 
 ```dart
-  Future<void> analyzeNetworkVideo() async {
     try {
       Dio dio = Dio();
       Directory tempDir = await getTemporaryDirectory();
@@ -155,37 +145,49 @@ final String? analyzeUrl = "https://docs-assets.developer.apple.com/published/51
       final response = await dio.download(url, file.path);
 
       if (response.statusCode == 200) {
-        bool? isSensitive = await sca.analyzeVideo(url: file.path);
-        debugPrint("SENSITIVE: $isSensitive");
+        SensitivityAnalysisResult? isSensitive =
+            await sca.analyzeVideo(url: file.path);
+        _showResultDialog(
+            "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
         await file.delete();
       }
     } catch (e) {
-      debugPrint(e.toString());
+      _showResultDialog("Error", e.toString());
     }
-  }
 ```
 
 #### Local Video:
 
 ```dart
-  Future<void> analyzeLocalVideo() async {
     try {
-      const XTypeGroup typeGroup = XTypeGroup(
-        label: 'video',
-        extensions: <String>['mp4', 'mkv', 'avi', 'mov'],
+      FilePickerResult? selectedFile = await FilePicker.pickFiles(
+        allowMultiple: false,
+        type: FileType.video,
       );
-      final XFile? selectedFile =
-          await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
-
       if (selectedFile != null) {
-        bool? isSensitive = await sca.analyzeVideo(url: selectedFile.path);
-        debugPrint("SENSITIVE: $isSensitive");
+        SensitivityAnalysisResult? isSensitive =
+            await sca.analyzeVideo(url: selectedFile.files.first.path!);
+        _showResultDialog(
+            "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
       }
     } catch (e) {
-      debugPrint(e.toString());
+      _showResultDialog("Error", e.toString());
     }
-  }
 ```
+
+### Result
+
+All `analyze` methods return a `SensitivityAnalysisResult` object:
+
+```dart
+class SensitivityAnalysisResult {
+  final bool isSensitive;
+  final List<String> detectedTypes; // Available on iOS 27.0+ / macOS 27.0+
+}
+```
+
+- `isSensitive` — whether the content was flagged as sensitive
+- `detectedTypes` — list of detected content categories, e.g. `"sexuallyExplicit"` or `"goreOrViolence"`. Empty on devices running below iOS 27.0 / macOS 27.0.
 
 ---
 

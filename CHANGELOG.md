@@ -1,3 +1,14 @@
+## 2.1.0
+### Breaking
+- `analyzeImage`, `analyzeNetworkImage`, and `analyzeVideo` now return `SensitivityAnalysisResult?` instead of `bool?`.
+
+### Added
+- `SensitivityAnalysisResult` with `isSensitive` (bool) and `detectedTypes` (List<String>).
+- `detectedTypes` returns detected content categories (e.g. `sexuallyExplicit`, `goreOrViolence`) on iOS 27.0+ / macOS 27.0+. Empty list on older OS versions.
+
+### Fix
+- Added a queue to `analyzeNetworkImage` preventing SCA from crashing and returning `null`.
+
 ## 2.0.3
 - Fix: Add backwards compatibility for cocoapods.
 

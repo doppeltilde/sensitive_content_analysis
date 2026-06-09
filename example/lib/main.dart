@@ -7,8 +7,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sensitive_content_analysis/sensitive_content_analysis.dart';
 import 'package:path/path.dart' as p;
+import 'package:sensitive_content_analysis_example/home_feed.dart';
+
+late final SensitiveContentAnalysis sca;
 
 void main() {
+  sca = SensitiveContentAnalysis();
   runApp(MaterialApp(theme: ThemeData.dark(), home: MyApp()));
 }
 
@@ -20,8 +24,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final sca = SensitiveContentAnalysis();
-
   Future<void> analyzeImage() async {
     try {
       final ImagePicker picker = ImagePicker();
@@ -33,8 +35,10 @@ class _MyAppState extends State<MyApp> {
         Uint8List imageData = await image.readAsBytes();
 
         // Analyze the image for sensitive content.
-        bool? isSensitive = await sca.analyzeImage(imageData);
-        _showResultDialog("Analysis Result", "SENSITIVE: $isSensitive");
+        SensitivityAnalysisResult? isSensitive =
+            await sca.analyzeImage(imageData);
+        _showResultDialog(
+            "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
       }
     } catch (e) {
       _showResultDialog("Error", e.toString());
@@ -47,8 +51,10 @@ class _MyAppState extends State<MyApp> {
           "https://docs-assets.developer.apple.com/published/517e263450/rendered2x-1685188934.png";
 
       // Analyze the image for sensitive content.
-      bool? isSensitive = await sca.analyzeNetworkImage(url: url);
-      _showResultDialog("Analysis Result", "SENSITIVE: $isSensitive");
+      SensitivityAnalysisResult? isSensitive =
+          await sca.analyzeNetworkImage(url: url);
+      _showResultDialog(
+          "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
     } catch (e) {
       _showResultDialog("Error", e.toString());
     }
@@ -65,8 +71,10 @@ class _MyAppState extends State<MyApp> {
       final response = await dio.download(url, file.path);
 
       if (response.statusCode == 200) {
-        bool? isSensitive = await sca.analyzeVideo(url: file.path);
-        _showResultDialog("Analysis Result", "SENSITIVE: $isSensitive");
+        SensitivityAnalysisResult? isSensitive =
+            await sca.analyzeVideo(url: file.path);
+        _showResultDialog(
+            "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
         await file.delete();
       }
     } catch (e) {
@@ -81,9 +89,10 @@ class _MyAppState extends State<MyApp> {
         type: FileType.video,
       );
       if (selectedFile != null) {
-        bool? isSensitive =
+        SensitivityAnalysisResult? isSensitive =
             await sca.analyzeVideo(url: selectedFile.files.first.path!);
-        _showResultDialog("Analysis Result", "SENSITIVE: $isSensitive");
+        _showResultDialog(
+            "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
       }
     } catch (e) {
       _showResultDialog("Error", e.toString());
@@ -129,6 +138,7 @@ class _MyAppState extends State<MyApp> {
             onPressed: () async => await checkPolicy(),
             child: const Text("Check Policy."),
           ),
+          warningWidget(),
         ]),
       ),
     );
@@ -149,6 +159,125 @@ class _MyAppState extends State<MyApp> {
           ],
         );
       },
+    );
+  }
+
+  TextButton warningWidget() {
+    return TextButton(
+      onPressed: () {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24.0),
+              ),
+              elevation: 10,
+              backgroundColor: Theme.of(context).cardColor,
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // Wrap content tightly
+                  children: [
+                    // 18+ Icon Header
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Text(
+                        "18+",
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.redAccent,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Title
+                    const Text(
+                      "Age Verification Required",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Content Description
+                    Text(
+                      "The home feed contains content intended for mature audiences. Please verify that you are 18 years or older to proceed.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+
+                    // Actions (Stacked for a cleaner, full-bleed button look)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context); // Close dialog
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const FeedScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          "I am 18 or older",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.grey[600],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () => Navigator.pop(context), // Close dialog
+                        child: const Text(
+                          "Go Back",
+                          style: TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+      child: const Text("Home feed example."),
     );
   }
 }

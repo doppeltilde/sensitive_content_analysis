@@ -5,12 +5,13 @@ const methodChannel = MethodChannel('sensitive_content_analysis');
 class SensitiveContentAnalysis {
   /// Analyzes an image for sensitive content.
   ///
-  /// Returns a `bool` indicating whether the image is sensitive.
-  Future<bool?> analyzeImage(Uint8List file) async {
+  /// Returns a [SensitivityAnalysisResult] with sensitivity status and detected content types.
+  Future<SensitivityAnalysisResult?> analyzeImage(Uint8List file) async {
     try {
-      final dynamic isSensitive =
-          await methodChannel.invokeMethod('analyzeImage', file);
-      return isSensitive;
+      final Map<Object?, Object?>? result =
+          await methodChannel.invokeMapMethod('analyzeImage', file);
+      if (result == null) return null;
+      return SensitivityAnalysisResult.fromMap(result);
     } on PlatformException catch (e) {
       throw UnimplementedError(e.message);
     }
@@ -18,12 +19,14 @@ class SensitiveContentAnalysis {
 
   /// Analyzes an network image for sensitive content.
   ///
-  /// Returns a `bool` indicating whether the image is sensitive.
-  Future<bool?> analyzeNetworkImage({required String url}) async {
+  /// Returns a [SensitivityAnalysisResult] with sensitivity status and detected content types.
+  Future<SensitivityAnalysisResult?> analyzeNetworkImage(
+      {required String url}) async {
     try {
-      final dynamic isSensitive =
-          await methodChannel.invokeMethod('analyzeNetworkImage', {"url": url});
-      return isSensitive;
+      final Map<Object?, Object?>? result = await methodChannel
+          .invokeMapMethod('analyzeNetworkImage', {"url": url});
+      if (result == null) return null;
+      return SensitivityAnalysisResult.fromMap(result);
     } on PlatformException catch (e) {
       throw UnimplementedError(e.message);
     }
@@ -31,12 +34,13 @@ class SensitiveContentAnalysis {
 
   /// Analyzes an video for sensitive content.
   ///
-  /// Returns a `bool` indicating whether the video is sensitive.
-  Future<bool?> analyzeVideo({required String url}) async {
+  /// Returns a [SensitivityAnalysisResult] with sensitivity status and detected content types.
+  Future<SensitivityAnalysisResult?> analyzeVideo({required String url}) async {
     try {
-      final dynamic isSensitive = await methodChannel
-          .invokeMethod('analyzeVideo', {"url": Uri.file(url).toString()});
-      return isSensitive;
+      final Map<Object?, Object?>? result = await methodChannel
+          .invokeMapMethod('analyzeVideo', {"url": Uri.file(url).toString()});
+      if (result == null) return null;
+      return SensitivityAnalysisResult.fromMap(result);
     } on PlatformException catch (e) {
       throw UnimplementedError(e.message);
     }
@@ -52,5 +56,25 @@ class SensitiveContentAnalysis {
     } on PlatformException catch (e) {
       throw UnimplementedError(e.message);
     }
+  }
+}
+
+class SensitivityAnalysisResult {
+  final bool isSensitive;
+  final List<String> detectedTypes;
+
+  const SensitivityAnalysisResult({
+    required this.isSensitive,
+    required this.detectedTypes,
+  });
+
+  factory SensitivityAnalysisResult.fromMap(Map<Object?, Object?> map) {
+    return SensitivityAnalysisResult(
+      isSensitive: map['isSensitive'] as bool? ?? false,
+      detectedTypes: (map['detectedTypes'] as List<Object?>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+    );
   }
 }
