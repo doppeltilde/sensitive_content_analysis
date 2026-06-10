@@ -30,16 +30,19 @@ class _MyAppState extends State<MyApp> {
       final ImagePicker picker = ImagePicker();
 
       // Pick an image.
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      final XFile? image = await picker.pickImage(source: .gallery);
 
       if (image != null) {
         Uint8List imageData = await image.readAsBytes();
 
         // Analyze the image for sensitive content.
-        SensitivityAnalysisResult? isSensitive =
-            await sca.analyzeImage(imageData);
+        SensitivityAnalysisResult? isSensitive = await sca.analyzeImage(
+          imageData,
+        );
         _showResultDialog(
-            "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
+          "Analysis Result",
+          "SENSITIVE: ${isSensitive?.isSensitive}",
+        );
       }
     } catch (e) {
       _showResultDialog("Error", e.toString());
@@ -52,10 +55,13 @@ class _MyAppState extends State<MyApp> {
           "https://docs-assets.developer.apple.com/published/517e263450/rendered2x-1685188934.png";
 
       // Analyze the image for sensitive content.
-      SensitivityAnalysisResult? isSensitive =
-          await sca.analyzeNetworkImage(url: url);
+      SensitivityAnalysisResult? isSensitive = await sca.analyzeNetworkImage(
+        url: url,
+      );
       _showResultDialog(
-          "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
+        "Analysis Result",
+        "SENSITIVE: ${isSensitive?.isSensitive}",
+      );
     } catch (e) {
       _showResultDialog("Error", e.toString());
     }
@@ -68,14 +74,34 @@ class _MyAppState extends State<MyApp> {
 
       const url = "https://developer.apple.com/sample-code/web/qr-sca.mov";
       final videoName = p.basename(url);
-      final file = File("${tempDir.path}/$videoName");
-      final response = await dio.download(url, file.path);
+      final file = File(p.join(tempDir.path, videoName));
+      if (await file.exists()) await file.delete();
+      debugPrint(file.path);
+
+      final response = await dio.download(
+        url,
+        file.path,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            double progress = received / total;
+            int percentage = (progress * 100).toInt();
+
+            debugPrint("Download progress: $percentage%");
+          } else {
+            debugPrint("Downloaded $received bytes (Total size unknown)");
+          }
+        },
+      );
 
       if (response.statusCode == 200) {
-        SensitivityAnalysisResult? isSensitive =
-            await sca.analyzeVideo(url: file.path);
+        SensitivityAnalysisResult? isSensitive = await sca.analyzeVideo(
+          url: file.path,
+        );
+
         _showResultDialog(
-            "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
+          "Analysis Result",
+          "SENSITIVE: ${isSensitive?.isSensitive}",
+        );
         await file.delete();
       }
     } catch (e) {
@@ -87,13 +113,16 @@ class _MyAppState extends State<MyApp> {
     try {
       FilePickerResult? selectedFile = await FilePicker.pickFiles(
         allowMultiple: false,
-        type: FileType.video,
+        type: .video,
       );
       if (selectedFile != null) {
-        SensitivityAnalysisResult? isSensitive =
-            await sca.analyzeVideo(url: selectedFile.files.first.path!);
+        SensitivityAnalysisResult? isSensitive = await sca.analyzeVideo(
+          url: selectedFile.files.first.path!,
+        );
         _showResultDialog(
-            "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
+          "Analysis Result",
+          "SENSITIVE: ${isSensitive?.isSensitive}",
+        );
       }
     } catch (e) {
       _showResultDialog("Error", e.toString());
@@ -104,6 +133,23 @@ class _MyAppState extends State<MyApp> {
     try {
       AnalysisPolicy? policy = await sca.checkPolicy();
       _showResultDialog("Policy Check", "Policy: ${policy?.name}");
+
+      switch (policy) {
+        case .descriptiveInterventions:
+          debugPrint(
+            "⚠️ Descriptive interventions with richer guidance are suggested.",
+          );
+          break;
+        case .simpleInterventions:
+          debugPrint("⚠️ Simple interventions (e.g. blurring) are suggested.");
+          break;
+        case .disabled:
+        default:
+          debugPrint(
+            "⚠️ Sensitive content analysis is DISABLED. Check entitlement + device settings.",
+          );
+          break;
+      }
     } catch (e) {
       _showResultDialog("Error", e.toString());
     }
@@ -118,38 +164,43 @@ class _MyAppState extends State<MyApp> {
         title: const Text('Plugin example app'),
       ),
       body: Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          TextButton(
-            onPressed: () async => await analyzeImage(),
-            child: const Text("Select Image."),
-          ),
-          TextButton(
-            onPressed: () async => await analyzeNetworkImage(),
-            child: const Text("Select Network Image."),
-          ),
-          TextButton(
-            onPressed: () async => await analyzeNetworkVideo(),
-            child: const Text("Analyze Downloaded Video."),
-          ),
-          TextButton(
-            onPressed: () async => await analyzeLocalVideo(),
-            child: const Text("Analyze Selected Video."),
-          ),
-          TextButton(
-            onPressed: () => Navigator.push(
+        child: Column(
+          mainAxisAlignment: .center,
+          children: [
+            TextButton(
+              onPressed: () async => await analyzeImage(),
+              child: const Text("Select Image."),
+            ),
+            TextButton(
+              onPressed: () async => await analyzeNetworkImage(),
+              child: const Text("Select Network Image."),
+            ),
+            TextButton(
+              onPressed: () async => await analyzeNetworkVideo(),
+              child: const Text("Analyze Downloaded Video."),
+            ),
+            TextButton(
+              onPressed: () async => await analyzeLocalVideo(),
+              child: const Text("Analyze Selected Video."),
+            ),
+            TextButton(
+              onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => CameraSensitiveAnalysisScreen(
-                      participantUUID: "participantUUIDExample"),
-                )),
-            child: const Text("Analyze Camera Stream."),
-          ),
-          TextButton(
-            onPressed: () async => await checkPolicy(),
-            child: const Text("Check Policy."),
-          ),
-          warningWidget(),
-        ]),
+                    participantUUID: "participantUUIDExample",
+                  ),
+                ),
+              ),
+              child: const Text("Analyze Camera Stream."),
+            ),
+            TextButton(
+              onPressed: () async => await checkPolicy(),
+              child: const Text("Check Policy."),
+            ),
+            warningWidget(),
+          ],
+        ),
       ),
     );
   }
@@ -180,28 +231,25 @@ class _MyAppState extends State<MyApp> {
           barrierDismissible: false,
           builder: (BuildContext context) {
             return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24.0),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: .circular(24.0)),
               elevation: 10,
               backgroundColor: Theme.of(context).cardColor,
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const .all(24.0),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: .min,
                   children: [
-                    // 18+ Icon Header
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const .all(16),
                       decoration: BoxDecoration(
                         color: Colors.red.withValues(alpha: .1),
-                        shape: BoxShape.circle,
+                        shape: .circle,
                       ),
                       child: const Text(
                         "18+",
                         style: TextStyle(
                           fontSize: 28,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: .bold,
                           color: Colors.redAccent,
                         ),
                       ),
@@ -211,10 +259,10 @@ class _MyAppState extends State<MyApp> {
                     // Title
                     const Text(
                       "Age Verification Required",
-                      textAlign: TextAlign.center,
+                      textAlign: .center,
                       style: TextStyle(
                         fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: .bold,
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -222,7 +270,7 @@ class _MyAppState extends State<MyApp> {
 
                     Text(
                       "The home feed contains content intended for mature audiences. Please verify that you are 18 years or older to proceed.",
-                      textAlign: TextAlign.center,
+                      textAlign: .center,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -232,14 +280,14 @@ class _MyAppState extends State<MyApp> {
                     const SizedBox(height: 28),
 
                     SizedBox(
-                      width: double.infinity,
+                      width: .infinity,
                       height: 48,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.redAccent,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: .circular(12),
                           ),
                           elevation: 0,
                         ),
@@ -254,27 +302,25 @@ class _MyAppState extends State<MyApp> {
                         },
                         child: const Text(
                           "I am 18 or older",
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w600),
+                          style: TextStyle(fontSize: 16, fontWeight: .w600),
                         ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     SizedBox(
-                      width: double.infinity,
+                      width: .infinity,
                       height: 44,
                       child: TextButton(
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.grey[600],
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: .circular(12),
                           ),
                         ),
                         onPressed: () => Navigator.pop(context),
                         child: const Text(
                           "Go Back",
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w500),
+                          style: TextStyle(fontSize: 15, fontWeight: .w500),
                         ),
                       ),
                     ),

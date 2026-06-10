@@ -6,10 +6,10 @@ class SensitiveContentAnalysis {
   /// Analyzes a local image for sensitive content.
   Future<SensitivityAnalysisResult?> analyzeImage(Uint8List file) async {
     try {
-      final Map<Object?, Object?>? result =
-          await _methodChannel.invokeMapMethod('analyzeImage', file);
+      final Map<Object?, Object?>? result = await _methodChannel
+          .invokeMapMethod('analyzeImage', file);
       if (result == null) return null;
-      return SensitivityAnalysisResult.fromMap(result);
+      return .fromMap(result);
     } on PlatformException catch (e) {
       throw UnimplementedError(e.message);
     }
@@ -23,21 +23,19 @@ class SensitiveContentAnalysis {
       final Map<Object?, Object?>? result = await _methodChannel
           .invokeMapMethod('analyzeNetworkImage', {'url': url});
       if (result == null) return null;
-      return SensitivityAnalysisResult.fromMap(result);
+      return .fromMap(result);
     } on PlatformException catch (e) {
       throw UnimplementedError(e.message);
     }
   }
 
   /// Analyzes a local video file for sensitive content.
-  Future<SensitivityAnalysisResult?> analyzeVideo({
-    required String url,
-  }) async {
+  Future<SensitivityAnalysisResult?> analyzeVideo({required String url}) async {
     try {
       final Map<Object?, Object?>? result = await _methodChannel
-          .invokeMapMethod('analyzeVideo', {'url': Uri.file(url).toString()});
+          .invokeMapMethod('analyzeVideo', {'url': url});
       if (result == null) return null;
-      return SensitivityAnalysisResult.fromMap(result);
+      return .fromMap(result);
     } on PlatformException catch (e) {
       throw UnimplementedError(e.message);
     }
@@ -48,7 +46,7 @@ class SensitiveContentAnalysis {
     try {
       final int? raw = await _methodChannel.invokeMethod('checkPolicy');
       if (raw == null) return null;
-      return AnalysisPolicy.fromInt(raw);
+      return .fromInt(raw);
     } on PlatformException catch (e) {
       throw UnimplementedError(e.message);
     }
@@ -75,9 +73,9 @@ class SensitiveContentAnalysis {
       throw UnimplementedError(e.message);
     }
 
-    return VideoStreamAnalyzer._(
+    return ._(
       participantUUID: participantUUID,
-      eventChannelName: eventChannelName,
+      eventChannel: EventChannel(eventChannelName),
     );
   }
 }
@@ -97,8 +95,8 @@ class SensitiveContentAnalysis {
 class VideoStreamAnalyzer {
   VideoStreamAnalyzer._({
     required this.participantUUID,
-    required String eventChannelName,
-  }) : _eventChannel = EventChannel(eventChannelName);
+    required this._eventChannel,
+  });
 
   final String participantUUID;
   final EventChannel _eventChannel;
@@ -111,8 +109,7 @@ class VideoStreamAnalyzer {
     return _eventChannel
         .receiveBroadcastStream()
         .where((event) => event is Map)
-        .map((event) =>
-            SensitivityAnalysisResult.fromMap(event as Map<Object?, Object?>));
+        .map((event) => .fromMap(event as Map<Object?, Object?>));
   }
 
   /// Passes a raw video frame to the analyzer.
@@ -188,36 +185,36 @@ class SensitivityAnalysisResult {
   final List<DetectedContentType> detectedTypes;
 
   /// App should indicate the presence of sensitive content to the user.
-  /// Available on iOS 26+ / macOS 26+; always false on older OS versions.
+  /// Available on iOS/ipadOS 26+ always false on older OS versions.
   final bool shouldIndicateSensitivity;
 
   /// App should interrupt video playback.
-  /// Available on iOS 26+ / macOS 26+; always false on older OS versions.
+  /// Available on iOS/ipadOS 26+ always false on older OS versions.
   final bool shouldInterruptVideo;
 
   /// App should mute the audio of the current video stream.
-  /// Available on iOS 26+ / macOS 26+; always false on older OS versions.
+  /// Available on iOS/ipadOS 26+ always false on older OS versions.
   final bool shouldMuteAudio;
 
   factory SensitivityAnalysisResult.fromMap(Map<Object?, Object?> map) {
-    final rawTypes = (map['detectedTypes'] as List<Object?>?)
-            ?.map((e) => DetectedContentType.fromString(e as String? ?? ''))
-            .whereType<DetectedContentType>()
-            .toList() ??
-        [];
+    bool toBool(String key) => map[key] as bool? ?? false;
 
     return SensitivityAnalysisResult(
-      isSensitive: map['isSensitive'] as bool? ?? false,
-      detectedTypes: rawTypes,
-      shouldIndicateSensitivity:
-          map['shouldIndicateSensitivity'] as bool? ?? false,
-      shouldInterruptVideo: map['shouldInterruptVideo'] as bool? ?? false,
-      shouldMuteAudio: map['shouldMuteAudio'] as bool? ?? false,
+      isSensitive: toBool('isSensitive'),
+      shouldIndicateSensitivity: toBool('shouldIndicateSensitivity'),
+      shouldInterruptVideo: toBool('shouldInterruptVideo'),
+      shouldMuteAudio: toBool('shouldMuteAudio'),
+      detectedTypes: (map['detectedTypes'] as List? ?? [])
+          .whereType<String>()
+          .map(DetectedContentType.fromString)
+          .whereType<DetectedContentType>()
+          .toList(),
     );
   }
 
   @override
-  String toString() => 'SensitivityAnalysisResult('
+  String toString() =>
+      'SensitivityAnalysisResult('
       'isSensitive: $isSensitive, '
       'detectedTypes: $detectedTypes, '
       'shouldIndicateSensitivity: $shouldIndicateSensitivity, '
@@ -234,10 +231,10 @@ enum DetectedContentType {
   goreOrViolence;
 
   static DetectedContentType? fromString(String value) => switch (value) {
-        'sexuallyExplicit' => DetectedContentType.sexuallyExplicit,
-        'goreOrViolence' => DetectedContentType.goreOrViolence,
-        _ => null,
-      };
+    'sexuallyExplicit' => .sexuallyExplicit,
+    'goreOrViolence' => .goreOrViolence,
+    _ => null,
+  };
 }
 
 enum AnalysisPolicy {
@@ -251,11 +248,11 @@ enum AnalysisPolicy {
   descriptiveInterventions;
 
   static AnalysisPolicy fromInt(int value) => switch (value) {
-        0 => AnalysisPolicy.disabled,
-        1 => AnalysisPolicy.simpleInterventions,
-        2 => AnalysisPolicy.descriptiveInterventions,
-        _ => throw ArgumentError('Unknown AnalysisPolicy value: $value'),
-      };
+    0 => .disabled,
+    1 => .simpleInterventions,
+    2 => .descriptiveInterventions,
+    _ => throw ArgumentError('Unknown AnalysisPolicy value: $value'),
+  };
 }
 
 enum StreamDirection {
@@ -263,5 +260,5 @@ enum StreamDirection {
   outgoing,
 
   /// An incoming stream from a remote participant.
-  incoming;
+  incoming,
 }

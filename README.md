@@ -4,7 +4,7 @@
 
 <img src="https://docs-assets.developer.apple.com/published/36d145c8a9/renderedDark2x-1684208404.png" width="500px"/>
 <img src="https://docs-assets.developer.apple.com/published/b266a0fa980fd3b5cc0b3e200e137495/sensitivecontentanalysis-2~dark%402x.png" width="500px" />
-<img src="https://www.apple.com/v/child-safety/overview/a/images/overview/communication/safety__c8aw8hnf4nwy_large_2x.jpg" width="250px" />
+<img src="https://www.apple.com/v/child-safety/overview/a/images/overview/communication/safety__c8aw8hnf4nwy_large_2x.jpg" width="350px" />
 
 [![Pub](https://img.shields.io/pub/v/sensitive_content_analysis.svg?style=popout&include_prereleases)](https://pub.dev/packages/sensitive_content_analysis)
 
@@ -57,18 +57,26 @@ https://developer.apple.com/documentation/sensitivecontentanalysis/testing-your-
 ### Check Policy:
 
 ```dart
-    try {
+try {
       AnalysisPolicy? policy = await sca.checkPolicy();
       _showResultDialog("Policy Check", "Policy: ${policy?.name}");
-      /// Analysis is disabled; always returns null from analysis methods.
-      /// .disabled
 
-      /// Simple interventions (e.g. blurring) are suggested.
-      /// .simpleInterventions
-
-      /// Descriptive interventions with richer guidance are suggested.
-      /// .descriptiveInterventions
-
+      switch (policy) {
+        case .descriptiveInterventions:
+          debugPrint(
+            "⚠️ Descriptive interventions with richer guidance are suggested.",
+          );
+          break;
+        case .simpleInterventions:
+          debugPrint("⚠️ Simple interventions (e.g. blurring) are suggested.");
+          break;
+        case .disabled:
+        default:
+          debugPrint(
+            "⚠️ Sensitive content analysis is DISABLED. Check entitlement + device settings.",
+          );
+          break;
+      }
     } catch (e) {
       _showResultDialog("Error", e.toString());
     }
@@ -172,12 +180,18 @@ All `analyze` methods return a `SensitivityAnalysisResult` object:
 ```dart
 class SensitivityAnalysisResult {
   final bool isSensitive;
-  final List<String> detectedTypes; // Available on iOS 27.0+ / macOS 27.0+
+  final List<String> detectedTypes;
+  final bool shouldIndicateSensitivity;
+  final bool shouldInterruptVideo;
+  final bool shouldMuteAudio;
 }
 ```
 
-- `isSensitive` — whether the content was flagged as sensitive
-- `detectedTypes` — list of detected content categories, e.g. `"sexuallyExplicit"` or `"goreOrViolence"`. Empty on devices running below iOS 27.0 / macOS 27.0.
+- `isSensitive`: whether the content was flagged as sensitive
+- `detectedTypes`: list of detected content categories, e.g. `"sexuallyExplicit"` or `"goreOrViolence"`. Empty on devices running below iOS 27+/ipadOS 27+/macOS 27+.
+- `shouldIndicateSensitivity`: App should indicate the presence of sensitive content to the user. Available on iOS/ipadOS 26+ always false on older OS versions
+- `shouldInterruptVideo`: App should interrupt video playback. Available on iOS/ipadOS 26+ always false on older OS versions.
+- `shouldMuteAudio`: App should mute the audio of the current video stream. Available on iOS/ipadOS 26+ always false on older OS versions.
 
 ---
 

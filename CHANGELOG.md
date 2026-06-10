@@ -1,3 +1,6 @@
+## 2.1.3
+- Chore: Bump Dart to >=3.12, Flutter to >=3.44, and clean up code.
+
 ## 2.1.2
 - Fix(iOS): Re-initialize video stream analyzer on stream continue.
 

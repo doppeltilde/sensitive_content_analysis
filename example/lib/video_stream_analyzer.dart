@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:sensitive_content_analysis/sensitive_content_analysis.dart';
 import 'package:sensitive_content_analysis_example/main.dart';
 import 'package:camera/camera.dart';
@@ -38,17 +37,18 @@ class _CameraSensitiveAnalysisScreenState
   }
 
   Future<void> _initializeSystem() async {
-    final policy = await SensitiveContentAnalysis().checkPolicy();
+    final policy = await sca.checkPolicy();
     debugPrint("Analysis Policy: $policy");
 
-    if (policy == AnalysisPolicy.disabled) {
+    if (policy == .disabled) {
       debugPrint(
-          "⚠️ Sensitive content analysis is DISABLED. Check entitlement + device settings.");
+        "⚠️ Sensitive content analysis is DISABLED. Check entitlement + device settings.",
+      );
     }
     try {
       _analyzer = await sca.createVideoStreamAnalyzer(
         participantUUID: widget.participantUUID,
-        streamDirection: StreamDirection.incoming,
+        streamDirection: .incoming,
       );
 
       _subscribeToAnalysisChanges();
@@ -60,9 +60,9 @@ class _CameraSensitiveAnalysisScreenState
 
       _cameraController = CameraController(
         cameras.first,
-        ResolutionPreset.medium,
-        enableAudio: false,
-        imageFormatGroup: ImageFormatGroup.bgra8888,
+        .medium,
+        enableAudio: true,
+        imageFormatGroup: .bgra8888,
       );
 
       await _cameraController!.initialize();
@@ -186,20 +186,18 @@ class _CameraSensitiveAnalysisScreenState
   @override
   Widget build(BuildContext context) {
     if (_isInitializing) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_errorMessage.isNotEmpty) {
       return Scaffold(
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const .all(24.0),
             child: Text(
               _errorMessage,
               style: const TextStyle(color: Colors.red, fontSize: 16),
-              textAlign: TextAlign.center,
+              textAlign: .center,
             ),
           ),
         ),
@@ -230,12 +228,9 @@ class _CameraSensitiveAnalysisScreenState
                   color: _isStreamInterrupted
                       ? Colors.red.withValues(alpha: 0.9)
                       : Colors.green.withValues(alpha: 0.9),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: .circular(12)),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 20.0),
+                    padding: const .symmetric(vertical: 16.0, horizontal: 20.0),
                     child: Row(
                       children: [
                         Icon(
@@ -248,15 +243,15 @@ class _CameraSensitiveAnalysisScreenState
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: .start,
+                            mainAxisSize: .min,
                             children: [
                               Text(
                                 _isStreamInterrupted ? "NOT SAFE" : "SAFE",
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: .bold,
                                   letterSpacing: 1.2,
                                 ),
                               ),
@@ -286,11 +281,11 @@ class _CameraSensitiveAnalysisScreenState
                 duration: const Duration(milliseconds: 300),
                 child: ClipRect(
                   child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
+                    filter: .blur(sigmaX: 50, sigmaY: 50),
                     child: Container(
                       color: Colors.black.withValues(alpha: 0.45),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: .center,
                         children: [
                           const Icon(
                             Icons.visibility_off_rounded,
@@ -300,17 +295,17 @@ class _CameraSensitiveAnalysisScreenState
                           const SizedBox(height: 16),
                           const Text(
                             "Sensitive Content Detected",
-                            textAlign: TextAlign.center,
+                            textAlign: .center,
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: .bold,
                             ),
                           ),
                           const SizedBox(height: 8),
                           const Text(
                             "The Video is paused because the video\nmay be showing something sensitive.",
-                            textAlign: TextAlign.center,
+                            textAlign: .center,
                             style: TextStyle(
                               color: Colors.white70,
                               fontSize: 14,
@@ -335,11 +330,13 @@ class _CameraSensitiveAnalysisScreenState
                             style: FilledButton.styleFrom(
                               backgroundColor: Colors.white,
                               foregroundColor: Colors.black87,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 28, vertical: 14),
+                              padding: const .symmetric(
+                                horizontal: 28,
+                                vertical: 14,
+                              ),
                               textStyle: const TextStyle(
                                 fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: .w600,
                               ),
                             ),
                           ),

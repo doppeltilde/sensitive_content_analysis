@@ -613,8 +613,7 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
     case "analyzeVideo":
       guard
         let args = call.arguments as? [String: Any],
-        let urlString = args["url"] as? String,
-        let url = URL(string: urlString)
+        let filePath = args["url"] as? String
       else {
         result(
           FlutterError(
@@ -625,6 +624,8 @@ public class SensitiveContentAnalysisPlugin: NSObject, FlutterPlugin {
         )
         return
       }
+
+      let url = URL(fileURLWithPath: filePath)
       analyzeVideo(at: url, result: result)
 
     case "analyzeNetworkImage":
