@@ -1,1 +1,0 @@
-../darwin/sensitive_content_analysis/sensitive_content_analysis.podspec

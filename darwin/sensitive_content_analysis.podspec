@@ -14,8 +14,7 @@ A new Flutter plugin project supporting Sensitive Content Analysis.
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
   
-  s.source_files = 'Sources/sensitive_content_analysis/**/*'
-  s.public_header_files = 'Sources/sensitive_content_analysis/**/*.h'
+  s.source_files = 'sensitive_content_analysis/Sources/sensitive_content_analysis/**/*'
   s.swift_version    = '5.5'
 
   s.ios.deployment_target = '13.0'

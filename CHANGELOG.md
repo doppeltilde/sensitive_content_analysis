@@ -1,3 +1,29 @@
+## 2.1.3
+- Chore: Bump Dart to >=3.12, Flutter to >=3.44, and clean up code.
+
+## 2.1.2
+- Fix(iOS): Re-initialize video stream analyzer on stream continue.
+
+## 2.1.1
+- Feat(iOS): Video Stream Analyzer.
+
+## 2.1.0
+### Breaking
+- `analyzeImage`, `analyzeNetworkImage`, and `analyzeVideo` now return `SensitivityAnalysisResult?` instead of `bool?`.
+
+### Added
+- `SensitivityAnalysisResult` with `isSensitive` (bool) and `detectedTypes` (List<String>).
+- `detectedTypes` returns detected content categories (e.g. `sexuallyExplicit`, `goreOrViolence`) on iOS 27.0+ / macOS 27.0+. Empty list on older OS versions.
+
+### Fix
+- Added a queue to `analyzeNetworkImage` preventing SCA from crashing and returning `null`.
+
+## 2.0.3
+- Fix: Add backwards compatibility for cocoapods.
+
+## 2.0.2
+- Fix: Data Race & Main Thread Violation
+
 ## 2.0.0
 - Support for Swift Package Manager.
 

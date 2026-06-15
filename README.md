@@ -3,11 +3,12 @@
 #### Provide a safer experience in your app by detecting and alerting users to nudity in images and videos before displaying them onscreen.
 
 <img src="https://docs-assets.developer.apple.com/published/36d145c8a9/renderedDark2x-1684208404.png" width="500px"/>
-<img src="https://docs-assets.developer.apple.com/published/57e2efdd76/rendered2x-1692659569.png" width="500px" />
+<img src="https://docs-assets.developer.apple.com/published/b266a0fa980fd3b5cc0b3e200e137495/sensitivecontentanalysis-2~dark%402x.png" width="500px" />
+<img src="https://www.apple.com/v/child-safety/overview/a/images/overview/communication/safety__c8aw8hnf4nwy_large_2x.jpg" width="350px" />
 
 [![Pub](https://img.shields.io/pub/v/sensitive_content_analysis.svg?style=popout&include_prereleases)](https://pub.dev/packages/sensitive_content_analysis)
 
-Dart package for interacting with Apple's
+Flutter package for interacting with Apple's
 [SensitiveContentAnalysis Framework](https://developer.apple.com/documentation/sensitivecontentanalysis).
 
 #### Minimum requirements
@@ -56,87 +57,71 @@ https://developer.apple.com/documentation/sensitivecontentanalysis/testing-your-
 ### Check Policy:
 
 ```dart
-final sca = SensitiveContentAnalysis();
+try {
+      AnalysisPolicy? policy = await sca.checkPolicy();
+      _showResultDialog("Policy Check", "Policy: ${policy?.name}");
 
-int? policy = await sca.checkPolicy();
-if (policy != null) {
-  return policy;
-}
+      switch (policy) {
+        case .descriptiveInterventions:
+          debugPrint(
+            "⚠️ Descriptive interventions with richer guidance are suggested.",
+          );
+          break;
+        case .simpleInterventions:
+          debugPrint("⚠️ Simple interventions (e.g. blurring) are suggested.");
+          break;
+        case .disabled:
+        default:
+          debugPrint(
+            "⚠️ Sensitive content analysis is DISABLED. Check entitlement + device settings.",
+          );
+          break;
+      }
+    } catch (e) {
+      _showResultDialog("Error", e.toString());
+    }
 ```
-> **case disabled = 0**
-> If disabled the framework doesn’t detect nudity. The system disables sensitive content analysis under any of the following conditions:
-> - The app lacks the necessary com.apple.developer.sensitivecontentanalysis.client entitlement.
-> - Neither the Sensitive Content Warning user preference nor the Communication Safety parental control in Screen Time are active.
-> - The user disables the Sensitive Content Warnings toggle in your app’s Settings.
-
-> **case simpleInterventions = 1**
-> simpleInterventions indicates that the user enables both of the following:
-> - Sensitive Content Warnings user preference
-> - Sensitive Content Warnings in your app’s settings
->
-> When your app detects nudity under this policy, your app needs to:
-> - Keep the intervention minimal by describing the issue briefly and updating your app’s UI unobstructively. For example, consider blurring and annotating the area that otherwise presents the sensitive content versus raising a new fullscreen alert.
-> - Intervene on the receipt of sensitve content over the network but allow the app to transmit content over the network unchecked.
-
-> **case descriptiveInterventions = 2**
-> descriptiveInterventions indicates that the user enables both of the following:
-> - Communication Safety parental control in Screen Time
-> - Sensitive Content Warnings in your app’s settings
->
-> When your app detects nudity under this policy, your app needs to:
-> - Use child-appropriate language, such as broadly understood vocabulary
-> - Present an alert that fills the full screen.
-> - Intervene on the receipt of sensitve content over a network and before transmitting sensitive content over a network.
 
 ### Analyze Image
 
 #### File Image:
 
 ```dart
-  try {
-    final sca = SensitiveContentAnalysis();
-    final ImagePicker picker = ImagePicker();
+    try {
+      final ImagePicker picker = ImagePicker();
 
-    // Pick an image.
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      // Pick an image.
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-    if (image != null) {
+      if (image != null) {
         Uint8List imageData = await image.readAsBytes();
 
         // Analyze the image for sensitive content.
-        final bool? isSensitive = await sca.analyzeImage(imageData);
-        if (isSensitive != null) {
-            return isSensitive;
-        } else {
-            debugPrint("Enable ”Sensitive Content Warning” in Settings -> Privacy & Security.");
-            return null;
-        }
+        SensitivityAnalysisResult? isSensitive =
+            await sca.analyzeImage(imageData);
+        _showResultDialog(
+            "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
+      }
+    } catch (e) {
+      _showResultDialog("Error", e.toString());
     }
-  } catch (e) {
-      return null;
-  }
 ```
 
 #### Network Image:
 
 ```dart
-final String? analyzeUrl = "https://docs-assets.developer.apple.com/published/517e263450/rendered2x-1685188934.png";
-
   try {
-    final sca = SensitiveContentAnalysis();
+      const url =
+          "https://docs-assets.developer.apple.com/published/517e263450/rendered2x-1685188934.png";
 
-    if (analyzeUrl != null) {
-        final bool? isSensitive = await sca.analyzeNetworkImage(url: analyzeUrl);
-        if (isSensitive != null) {
-            return isSensitive;
-        } else {
-            debugPrint("Enable ”Sensitive Content Warning” in Settings -> Privacy & Security.");
-            return null;
-        }
+      // Analyze the image for sensitive content.
+      SensitivityAnalysisResult? isSensitive =
+          await sca.analyzeNetworkImage(url: url);
+      _showResultDialog(
+          "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
+    } catch (e) {
+      _showResultDialog("Error", e.toString());
     }
-  } catch (e) {
-      return null;
-  }
 ```
 
 ### Analyze Video
@@ -144,7 +129,6 @@ final String? analyzeUrl = "https://docs-assets.developer.apple.com/published/51
 #### Network Video:
 
 ```dart
-  Future<void> analyzeNetworkVideo() async {
     try {
       Dio dio = Dio();
       Directory tempDir = await getTemporaryDirectory();
@@ -155,37 +139,59 @@ final String? analyzeUrl = "https://docs-assets.developer.apple.com/published/51
       final response = await dio.download(url, file.path);
 
       if (response.statusCode == 200) {
-        bool? isSensitive = await sca.analyzeVideo(url: file.path);
-        debugPrint("SENSITIVE: $isSensitive");
+        SensitivityAnalysisResult? isSensitive =
+            await sca.analyzeVideo(url: file.path);
+        _showResultDialog(
+            "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
         await file.delete();
       }
     } catch (e) {
-      debugPrint(e.toString());
+      _showResultDialog("Error", e.toString());
     }
-  }
 ```
 
 #### Local Video:
 
 ```dart
-  Future<void> analyzeLocalVideo() async {
     try {
-      const XTypeGroup typeGroup = XTypeGroup(
-        label: 'video',
-        extensions: <String>['mp4', 'mkv', 'avi', 'mov'],
+      FilePickerResult? selectedFile = await FilePicker.pickFiles(
+        allowMultiple: false,
+        type: FileType.video,
       );
-      final XFile? selectedFile =
-          await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
-
       if (selectedFile != null) {
-        bool? isSensitive = await sca.analyzeVideo(url: selectedFile.path);
-        debugPrint("SENSITIVE: $isSensitive");
+        SensitivityAnalysisResult? isSensitive =
+            await sca.analyzeVideo(url: selectedFile.files.first.path!);
+        _showResultDialog(
+            "Analysis Result", "SENSITIVE: ${isSensitive?.isSensitive}");
       }
     } catch (e) {
-      debugPrint(e.toString());
+      _showResultDialog("Error", e.toString());
     }
-  }
 ```
+
+#### Video Stream:
+> [!NOTE]  
+> Please refer to the [`video_stream_analyzer`](example/lib/video_stream_analyzer.dart) example.
+
+### Result
+
+All `analyze` methods return a `SensitivityAnalysisResult` object:
+
+```dart
+class SensitivityAnalysisResult {
+  final bool isSensitive;
+  final List<String> detectedTypes;
+  final bool shouldIndicateSensitivity;
+  final bool shouldInterruptVideo;
+  final bool shouldMuteAudio;
+}
+```
+
+- `isSensitive`: whether the content was flagged as sensitive
+- `detectedTypes`: list of detected content categories, e.g. `"sexuallyExplicit"` or `"goreOrViolence"`. Empty on devices running below iOS 27+/ipadOS 27+/macOS 27+.
+- `shouldIndicateSensitivity`: App should indicate the presence of sensitive content to the user. Available on iOS/ipadOS 26+ always false on older OS versions
+- `shouldInterruptVideo`: App should interrupt video playback. Available on iOS/ipadOS 26+ always false on older OS versions.
+- `shouldMuteAudio`: App should mute the audio of the current video stream. Available on iOS/ipadOS 26+ always false on older OS versions.
 
 ---
 

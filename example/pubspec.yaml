@@ -3,7 +3,7 @@ description: "Demonstrates how to use the sensitive_content_analysis plugin."
 publish_to: 'none'
 
 environment:
-  sdk: '>=3.1.0 <4.0.0'
+  sdk: '>=3.12.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -16,12 +16,17 @@ dependencies:
   file_picker: 12.0.0-beta.3 #^11.0.2
   path_provider: ^2.1.5
   dio: ^5.9.2
+  path: ^1.9.1
+  cached_network_image: ^3.4.1
+  camera: ^0.12.0+1
 
 dev_dependencies:
   integration_test:
     sdk: flutter
   flutter_test:
     sdk: flutter
+  mockito: ^5.4.4
+  build_runner: ^2.4.9
 
   flutter_lints: ^6.0.0
 
